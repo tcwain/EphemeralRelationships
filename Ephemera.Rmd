@@ -220,13 +220,15 @@ library(MASS)
 dat <- as.matrix(cbind(RECR=popdata$ADULTS, predictors[, -1]))
 print(colnames(dat))
 image(cor(dat), col=RColorBrewer::brewer.pal(11,'RdBu'))
-dat2 <- dat[ , -grep("NPI_", colnames(dat))] #NPI is off the charts on distance
-data.mds <- cmdscale(dist(t(dat2)))
-eqscplot(data.mds, type='n')
-text(data.mds, labels=rownames(data.mds), cex=0.5)
+##dat2 <- dat[ , -grep("NPI_", colnames(dat))] #NPI is off the charts on distance
+d <- as.dist(1 - abs(cor(dat))^2)             # correlation-based distances
 # Cluster (including NPI this time)
-h <- hclust(dist(t(dat2)), method="single")
+h <- hclust(d, method="single")
+clcode <- cutree(h, 5)
 plot(h, cex=0.5)
+data.mds <- cmdscale(d)
+eqscplot(data.mds, type='n')
+text(data.mds, labels=rownames(data.mds), cex=0.5, col=clcode)
 ```
 
 ```{r cleanup, echo=FALSE}
