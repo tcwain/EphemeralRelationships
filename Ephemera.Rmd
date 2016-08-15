@@ -24,7 +24,7 @@ load(".RData") #not done automatically in interactive knitr session.
 
 ## Data
 
-Read in the data
+Read in the data. Eliminate MEI series from the environmental data, as that almost duplicates ONI, but correlates more with other variables.
 
 ```{r ReadData, fig.cap="Oregon Coho Salmon trend"}
 dataDir <- file.path(".", "Data")
@@ -35,6 +35,7 @@ popdata$YEAR <- popdata$YEAR - 1
 # Filter out missing values
 popdata <- popdata[!is.na(popdata$ADULTS), ]
 envdata <- read.table(file.path(dataDir, "Physical_3mo.dat"), header=TRUE)
+envdata <- envdata[, -grep('MEI_', colnames(envdata))]
 # Make sure both cover same set of years:
 envdata <- envdata[envdata$YEAR %in% popdata$YEAR, ]
 popdata <- popdata[popdata$YEAR %in% envdata$YEAR, ]
@@ -217,11 +218,11 @@ Look at some clustering patterns in the raw data and in the patterns of skill.
 ```{r Clustering, fig.height=9, fig.width=9}
 # raw Data, leave out YEAR (col. 1) from predictors
 library(MASS)
-dat <- as.matrix(cbind(RECR=popdata$ADULTS, predictors[, -1]))
+dat <- as.matrix(cbind(RECR=popdata$logAD, predictors[, -1]))
 print(colnames(dat))
 image(cor(dat), col=RColorBrewer::brewer.pal(11,'RdBu'))
 ##dat2 <- dat[ , -grep("NPI_", colnames(dat))] #NPI is off the charts on distance
-d <- as.dist(1 - abs(cor(dat))^2)             # correlation-based distances
+d <- as.dist(1 - abs(cor(dat)))             # correlation-based distances
 # Cluster (including NPI this time)
 h <- hclust(d, method="single")
 clcode <- cutree(h, 5)
