@@ -109,7 +109,7 @@ rm(X, Y, tdf, res)
 Next, a function to compute the model fit at all scales. For a multivariate data time series of length N, applies a goodness-of-fit function to all overlapping subseries of length n, where n runs from a lower limit k (5 by default) to the entire series length. Results are stored in an N x (N-k+1) matrix suitable for plotting via ``image``.
 
 ```{r tsapplyFunc}
-tsapply <- compiler::cmpfun(function(dataser, goffnc, minlen=5) {
+tsapply <- compiler::cmpfun(function(dataser, goffnc, minlen=10) {
   # dataser is a multivariate time series, in the form of a data.frame
   # goffnc is a function that fits a model to a data frame, and returns 
   #   a single numeric goodness-of-fit measure.
