@@ -215,22 +215,38 @@ rm(op)
 
 Look at some clustering patterns in the raw data and in the patterns of skill.
 
-```{r Clustering, fig.height=9, fig.width=9}
+```{r Clustering1, fig.height=9, fig.width=9}
 # raw Data, leave out YEAR (col. 1) from predictors
 library(MASS)
 dat <- as.matrix(cbind(RECR=popdata$logAD, predictors[, -1]))
 print(colnames(dat))
 image(cor(dat), col=RColorBrewer::brewer.pal(11,'RdBu'))
-##dat2 <- dat[ , -grep("NPI_", colnames(dat))] #NPI is off the charts on distance
-d <- as.dist(1 - abs(cor(dat)))             # correlation-based distances
-# Cluster (including NPI this time)
-h <- hclust(d, method="single")
-clcode <- cutree(h, 5)
-plot(h, cex=0.5)
-data.mds <- cmdscale(d)
+d1 <- as.dist(1 - abs(cor(dat)))             # correlation-based distances
+h1 <- hclust(d1, method="single")
+clcode <- cutree(h1, 7)
+plot(h1, cex=0.5)
+data.mds <- cmdscale(d1, k=2)
 eqscplot(data.mds, type='n')
 text(data.mds, labels=rownames(data.mds), cex=0.5, col=clcode)
 ```
+
+Bonneville flow and NPGO are strongly clustered outliers, NPI is all over the place, ONI clusters together (but not in the mds plot), not much else of interest. The MDS plot seems to need more axes to capture the structure.
+
+```{r Clustering2, fig.height=9, fig.width=9}
+# cluster based on similarity of skill patterns
+dat <- as.data.frame(lapply(ss.out, "[[", "gof"))
+dat <- dat[, -grep("YEAR",colnames(dat))]
+dat[dat<0] <- 0
+d2 <- dist(t(dat))
+h2 <- hclust(d2, method="single")
+plot(h2, cex=0.5)
+clcode <- cutree(h2, 7)
+data.mds <- cmdscale(d2, k=2)
+eqscplot(data.mds, type='n')
+text(data.mds, labels=rownames(data.mds), cex=0.5, col=clcode)
+```
+
+Not much of interest there. BFL still mostly outliers, more seasonal separations, little interpretable structure otherwise.
 
 ```{r cleanup, echo=FALSE}
 save.image() # save data for re-use
