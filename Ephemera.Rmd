@@ -24,9 +24,9 @@ load(".RData") #not done automatically in interactive knitr session.
 
 ## Data
 
-Read in the data. Eliminate MEI series from the environmental data, as that almost duplicates ONI, but correlates more with other variables. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: freshwater year (year 0), ocean entry year (year 1), and return year (year 2).
+Read in the data. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: hatch year (year 0), ocean entry year (year 1), and return year (year 2). This eliminates series MEI, which was stored as 2-month averages instead of 3-month averages (no idea why) -- MEI was highly correlated with ONI anyway.
 
-```{r ReadData, fig.cap="Oregon Coho Salmon trend"}
+```{r ReadData}
 dataDir <- file.path(".", "Data")
 # Coho population data:
 popdata <- read.table(file.path(dataDir, "OCN_Rivers.dat"), header=TRUE)
@@ -37,8 +37,8 @@ popdata$YEAR <- popdata$YEAR - 2
 popdata <- popdata[!is.na(popdata$ADULTS), ]
 # Environmental data:
 envdata <- read.table(file.path(dataDir, "Physical_3mo.dat"), header=TRUE)
-# Remove MEI:
-envdata <- envdata[, -grep('MEI_', colnames(envdata))]
+# shorten NPGO abbrev. to 3 letters:
+names(envdata) <- sub('NPGO_', 'NPG_', names(envdata))
 newdata <- cbind(YEAR=envdata$YEAR, SPR.TRN=envdata$SPR.TRN,
                  envdata[ , grep('_JFM', colnames(envdata))],
                  envdata[ , grep('_AMJ', colnames(envdata))],
@@ -52,26 +52,28 @@ lag2 <- newdata[3:(nrow(newdata)), ]
 names(lag2) <- paste0(names(lag2), '_2')
 envdata <- cbind(YEAR=lag0$`YEAR_0`, lag0[ , -1], lag1[ , -1], lag2[ , -1])
 envdata <- envdata[ , order(substr(names(envdata), 1, 3))]
-rm(newdata, lag0, lagm1, lagp1)
+rm(newdata, lag0, lag1, lag2)
 # Make sure both data sets cover same set of years:
 envdata <- envdata[envdata$YEAR %in% popdata$YEAR, ]
 popdata <- popdata[popdata$YEAR %in% envdata$YEAR, ]
-##summary(popdata)
 plot(popdata$YEAR, popdata$ADULTS, type='l', fg='grey', col='blue', 
      lwd=2, log='y',      xlab='Year', ylab='Abundance (1000\`s)', 
      main= 'OCNR Coho Adult Recruits')
-##summary(envdata)
 ```
 
-Select predictors
+Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively with other varialbles.
 
 ```{r SelectPredictors}
-# FUTURE: Select data here
 predictors <- envdata # Whole data set
 ## Testing - just use 6 predictors 
 # predictors <- envdata[ , 1:6]
+predictors[ , grep('NPG_', colnames(predictors))] <- 
+  - predictors[ , grep('NPG_', colnames(predictors))]
+predictors[ , grep('NPI_', colnames(predictors))] <- 
+  - predictors[ , grep('NPI_', colnames(predictors))]
+predictors[ , grep('UWI_', colnames(predictors))] <- 
+  - predictors[ , grep('UWI_', colnames(predictors))]
 plot.names <- colnames(predictors)   # FUTURE: Pretty names
-npred <- ncol(predictors) #No. of predictor series
 ```
 
 ## Analysis
@@ -100,7 +102,7 @@ loo.skill <- compiler::cmpfun(function(df) {
 }) # loo.skill
 ```
 
-```{r TestLOO, echo=FALSE, eval=FALSE, fig.cap="Test with no correlation. Circles are data, '+' are loo predictions."}
+```{r TestLOO, echo=FALSE, eval=FALSE}
 testN <- 10
 # Perfect relationship:
 X <- Y <- rnorm(testN)
@@ -123,7 +125,7 @@ summary(res)
 rm(X, Y, tdf, res)
 ```
 
-Next, a function to compute the model fit at all scales. For a multivariate data time series of length N, applies a goodness-of-fit function to all overlapping subseries of length n, where n runs from a lower limit k (5 by default) to the entire series length. Results are stored in an N x (N-k+1) matrix suitable for plotting via ``image``.
+Next, a function to compute the model fit at all scales. For a multivariate data time series of length N, applies a goodness-of-fit function to all overlapping subseries of length n, where n runs from a lower limit k (10 by default) to the entire series length. Results are stored in an N x (N-k+1) matrix suitable for plotting via ``image``.
 
 ```{r tsapplyFunc}
 tsapply <- compiler::cmpfun(function(dataser, goffnc, minlen=10) {
@@ -132,20 +134,15 @@ tsapply <- compiler::cmpfun(function(dataser, goffnc, minlen=10) {
   #   a single numeric goodness-of-fit measure.
   # minlen is the minumum data subset length
   N <- nrow(dataser)
-##  res <- matrix (NA, nrow=N, ncol=N-minlen+1)
   res <- data.frame(time=NULL, scale=NULL, gof=NULL)
-#  if ( ! (minlen %% 2) ) minlen <- minlen + 1  #Force minlen to be odd
-#  for (n in seq(minlen, N, 2)) { # Only odd values
   for (n in minlen:N) {
     for (j in 1:(N-n+1)) {
       .sub <- j + 0:(n-1)
       if (length(.sub) != n) stop("length(.sub) = ", length(.sub), ", n = ", n)
       .dat <- dataser[.sub, ]
-##      res[j+ceiling(n/2)-1, n-minlen] <- goffnc(.dat) #use lower num for n even
       res <- rbind(res, data.frame(time=max(.sub), scale=n, gof=goffnc(.dat)))
     } # for(t)
   } # for(n)
-##  return(list(x=0:N, y=minlen:(N+1)-0.5, z=res))
   return(res)
 }) # tsapply
 ```
@@ -154,7 +151,7 @@ We want a graphic that shows both the strength of the relationship (skill) and i
 
 In the plot, color indicates sign (blue positive, red negative) and circle size indicates skill. Contours are added at skill levels 0.25 (thin dotted), 0.5 (dashed) and 0.75 (solid).
 
-```{r slopeSkill, fig.height=6, fig.cap="Test 1"}
+```{r slopeSkill, fig.height=6}
 slpSkill <- function(X, Y) {
   #return LOO skill and regression slope in one data frame
   loo.res <- tsapply(data.frame(X=X,Y=Y), function(df) {loo.skill(df)$CVS})
@@ -209,12 +206,13 @@ if (!exists("ss.out")) {
                        slpSkill(X=popdata$logAD, Y=predictors[ , k])
                        },
                      mc.cores=mc)
+  rm(mc, preds)
 } # if (!exists(ss.out))
 ```
 
 Summarize results and plot. Plots are done only for those with skill above a threshold. The X-axis is the year of ocean entry (return year - 1).
 
-```{r Results, fig.height=3, fig.width=9, fig.cap="Coho V Environment"}
+```{r Results, fig.height=3, fig.width=9}
 skillthresh <- 0.00
 op <- par(mfrow=c(1,3), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
 for (series in names(ss.out)) {
@@ -227,17 +225,16 @@ for (series in names(ss.out)) {
   } # if
 } # for(series)
 par(op)
-rm(op)
+rm(skillthresh, op)
 ```
 
 Look at some clustering patterns in the raw data and in the patterns of skill.
 
 ```{r Clustering1, fig.height=9, fig.width=9}
-# raw Data, leave out YEAR (col. 1) from predictors
+# raw Data
 library(MASS)
-dat <- as.matrix(cbind(RECR=popdata$logAD, predictors[, -1]))
+dat <- as.matrix(cbind(RECR=popdata$logAD, predictors))
 dat <- dat[ !apply(dat, 1, function(x) any(is.na(x))), ]
-print(colnames(dat))
 image(cor(dat), col=RColorBrewer::brewer.pal(11,'RdBu'))
 d1 <- as.dist(1 - abs(cor(dat)))             # correlation-based distances
 h1 <- hclust(d1, method="single")
@@ -246,9 +243,8 @@ plot(h1, cex=0.5)
 data.mds <- cmdscale(d1, k=2)
 eqscplot(data.mds, type='n')
 text(data.mds, labels=rownames(data.mds), cex=0.5, col=clcode)
+rm(dat, d1, h1, clcode, data.mds)
 ```
-
-Bonneville flow and NPGO are strongly clustered outliers, NPI is all over the place, ONI clusters together (but not in the mds plot), not much else of interest. The MDS plot seems to need more axes to capture the structure.
 
 ```{r Clustering2, fig.height=9, fig.width=9}
 # cluster based on similarity of skill patterns
@@ -262,10 +258,10 @@ clcode <- cutree(h2, 7)
 data.mds <- cmdscale(d2, k=2)
 eqscplot(data.mds, type='n')
 text(data.mds, labels=rownames(data.mds), cex=0.5, col=clcode)
+rm(dat, d2, h2, clcode, data.mds)
 ```
 
-Not much of interest there. BFL still mostly outliers, more seasonal separations, little interpretable structure otherwise.
-
 ```{r cleanup, echo=FALSE}
+ls() # see what's being saved
 save.image() # save data for re-use
 ```
