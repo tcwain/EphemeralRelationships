@@ -24,9 +24,9 @@ load(".RData") #not done automatically in interactive knitr session.
 
 ## Data
 
-Read in the data. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: hatch year (year 0), ocean entry year (year 1), and return year (year 2). This eliminates series MEI, which was stored as 2-month averages instead of 3-month averages (no idea why) -- MEI was highly correlated with ONI anyway.
+Read in the Physical data. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: hatch year (year 0), ocean entry year (year 1), and return year (year 2). This eliminates series MEI, which was stored as 2-month averages instead of 3-month averages (no idea why) -- MEI was highly correlated with ONI anyway.
 
-```{r ReadData}
+```{r ReadPhysData}
 dataDir <- file.path(".", "Data")
 # Coho population data:
 popdata <- read.table(file.path(dataDir, "OCN_Rivers.dat"), header=TRUE)
@@ -59,6 +59,26 @@ popdata <- popdata[popdata$YEAR %in% envdata$YEAR, ]
 plot(popdata$YEAR, popdata$ADULTS, type='l', fg='grey', col='blue', 
      lwd=2, log='y',      xlab='Year', ylab='Abundance (1000\`s)', 
      main= 'OCNR Coho Adult Recruits')
+```
+
+Read in biological data. These are found in the NWFSC "Salmon Forecasting" website "Stoplight Chart". The data table is very messy with blank rows and text notes mixed in. Data series are rows, years are columns. First column is long data series names mixed with notes. Needs to be extracted row-by-row. First row is year and Biological indicators appear to be in rows 12-18. Variables are:
+
+* CPR_Su - Copepod richness anom. (no. species; May-Sept)
+* NCP_Su - N. copepod biomass anom. (mg C m-3; May-Sept)
+* SCP_Su - S. copepod biomass anom. (mg C m-3; May-Sept)
+* BioTrn - Biological transition(day of year)
+* ICH_Wi - Ichthyoplankton biomass (mg C 1000 m-3; Jan-Mar)
+* CHNjuv - Chinook salmon juvenile catches (no. km-1; June)
+* COHjuv - Coho salmon juvenile catches (no. km-1; June)
+
+```{r ReadBiolData}
+url <- "https://www.nwfsc.noaa.gov/research/divisions/fe/estuarine/oeip/documents/Table%20SF-03.csv"
+bioraw <- read.csv(url, skip=1, header=FALSE)
+## print(bioraw[,1]) #check row labels - make sure row numbers below are OK
+biodata <- data.frame(t(bioraw[c(1, 12:18),2:ncol(bioraw)]))
+rownames(biodata) <- NULL
+names(biodata) <- c("Year", "CPR_Su", "NCP_Su", "SCP_Su", "BioTrn", "ICH_Wi", "CHNjuv", "COHjuv")
+print(head(biodata))
 ```
 
 Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively with other varialbles.
