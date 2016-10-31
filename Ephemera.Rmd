@@ -6,7 +6,7 @@ output:
   html_document:
     fig_caption: yes
     highlight: tango
-    self_contained: yes
+    self_contained: no
     theme: journal
   pdf_document:
     fig_caption: yes
@@ -94,8 +94,6 @@ Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively w
 
 ```{r SelectPredictors}
 predictors <- envdata # Whole data set
-## Testing - just use 6 predictors 
-# predictors <- envdata[ , 1:6]
 ## reverse sign on some predictors to have consistent +/- regr. slopes
 predictors[ , grep('NPG_', colnames(predictors))] <- 
   - predictors[ , grep('NPG_', colnames(predictors))]
@@ -104,6 +102,8 @@ predictors[ , grep('NPI_', colnames(predictors))] <-
 predictors[ , grep('UWI_', colnames(predictors))] <- 
   - predictors[ , grep('UWI_', colnames(predictors))]
 plot.names <- colnames(predictors)   # FUTURE: Pretty names
+## Testing - subset of predictors 
+## predictors <- predictors[ , 1:12]
 ```
 
 ## Analysis
@@ -181,7 +181,7 @@ We want a graphic that shows both the strength of the relationship (skill) and i
 
 In the plot, color indicates sign (blue positive, red negative) and circle size indicates skill. Contours are added at skill levels 0.25 (thin dotted), 0.5 (dashed) and 0.75 (solid).
 
-```{r slopeSkill, fig.height=6}
+```{r slopeSkill, fig.height=9, fig.width=9}
 slpSkill <- function(X, Y) {
   #return LOO skill and regression slope in one data frame
   loo.res <- tsapply(data.frame(X=X,Y=Y), function(df) {loo.skill(df)$CVS})
@@ -198,7 +198,7 @@ skillPlot <- function(ss, title="", dot.scale=0.5) {
   ss$gof <- pmax(0,ss$gof) # get rid of negative values (very bad fit)
   plot(ss$time, ss$scale, type='n', asp=1.0, xaxs='r', 
        xlab='Interval Endpoint', ylab='Interval Length')
-  text(min(ss$time), max(ss$scale), title, cex=2, adj=c(0, 1), col='black')
+  text(min(ss$time), max(ss$scale), title, cex=1.25, adj=c(0, 1), col='black')
   text(min(ss$time), max(ss$scale) - 0.1 * diff(range(ss$scale)),
        paste0("Long-term Skill: ", round(ss$gof[ss$scale==max(ss$scale)],2)), 
        cex=1, adj=c(0,1), col='black')
@@ -219,6 +219,22 @@ Y <- X + rnorm(30)
 tst <- slpSkill(X, Y)
 skillPlot(tst, title='Test')
 rm(X, Y, tst)
+```
+
+### Test with AR(1) random series
+
+Generate 12 pairs of random AR(1) series, plot patterns.
+
+```{r ARtest, fig.height=6, fig.width=9}
+op <- par(mfrow=c(3,4), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
+for (i in 1:12) {
+  X <- arima.sim(n=30, model=list(ar=0.7))
+  Y <- arima.sim(n=30, model=list(ar=0.7))
+  tst <- slpSkill(X, Y)
+  skillPlot(tst, title=paste0('Tst_AR1_',i))
+  rm(X, Y, tst)
+}
+par(op)
 ```
 
 ## Real Data
