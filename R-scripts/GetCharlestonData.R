@@ -5,7 +5,7 @@
 
 ##pdf('CharlestonDataFigs.pdf')
 
-if (!exists(maxFileAge)) maxFileAge <- 5 # Maximum age of a local data file, only if undefined
+if (!exists('maxFileAge')) maxFileAge <- 5 # Maximum age of a local data file, only if undefined
 
 #Local file for times of higher high tides at tide station
 hh.file <- file.path(dd.dir, 'HiHiTides_9432780.csv')
