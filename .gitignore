@@ -17,4 +17,4 @@ Read-and-delete-me
 [Vv]ignettes/*.html
 [Vv]ignettes/*.md
 # ignore downloaded data
-Data/Download/
+[Dd]ata/[Dd]ownload/*
