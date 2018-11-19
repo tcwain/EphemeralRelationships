@@ -16,3 +16,5 @@ Read-and-delete-me
 # track only the source files in vignettes
 [Vv]ignettes/*.html
 [Vv]ignettes/*.md
+# ignore downloaded data
+Data/Download/
