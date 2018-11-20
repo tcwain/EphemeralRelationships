@@ -18,7 +18,7 @@ oimbwt.daily.file <- file.path(hand.dir, 'WT.OIMB.daily.csv')
 #Local file for final blended Charleston coastal water temperature:
 wt.file <- file.path(dd.dir, 'CWT.tbl')
 #Local file for Stonewall Banks buoy monthly SST (created elsewhere)
-buoy.file <- file.path(dd.dir, 'SST.46050.mon.csv')
+buoy.file <- file.path(hand.dir, 'SST.46050.mon.csv')
 
 ### 1. Download Charleston tide station data ###
 

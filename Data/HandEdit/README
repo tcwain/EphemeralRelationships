@@ -15,3 +15,7 @@ stable location on that site.
 OCN Rivers Coho Salmon abundance: Updates available in the PFMC Preaseaon 
 Report I, or from ODFW (at present, contact Mark Lewis or Erik Suring).
 
+Buoy 46050 SST data: This is historic monthly data from the Stonewall Banks 
+buoy, used to calibrate the OIMB pier temperatures. Only needs to have years 
+2000 - 2009. NOTE that a newer, updated version of this file will be created 
+in the Download directory.
