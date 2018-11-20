@@ -1,0 +1,17 @@
+Data in this folder need to be obtained and/or edited by hand.
+
+OIMB pier (Charleston, OR) water temperature data are from Pete Lawson, NOAA. 
+No longer collected, not sure if they are still available on the web. NO NEED
+TO EDIT, just make sure it's there (WT.OIMB.daily.csv, WT.OIMB.mon.csv).
+
+Spring Transition (SpringTrans.csv): only the Logerwell method is used here. 
+Recent estimates should be availble in the annual PFMC salmon management 
+"Preseason Report I" in the appendix table of OCN coho forecast data series.
+
+Stoplight chart data: At present, downloadable as a CSV file from the NOAA 
+Northwest Fisheries Science Center web site (www.nwfsc.noaa.gov), but no 
+stable location on that site.
+
+OCN Rivers Coho Salmon abundance: Updates available in the PFMC Preaseaon 
+Report I, or from ODFW (at present, contact Mark Lewis or Erik Suring).
+
