@@ -1,7 +1,7 @@
 #Download older data (1993 up to last calendar year) data from Charleston, OR
 # tide station (sta. ID 9432780)
 
-## Note: dd.dir is defined by calling script
+## Note: dd.dir and hand.dir are defined by calling script
 
 ##pdf('CharlestonDataFigs.pdf')
 
@@ -12,15 +12,15 @@ hh.file <- file.path(dd.dir, 'HiHiTides_9432780.csv')
 #Local file for tide station monthly flood-tide water temp means
 tswt.file <- file.path(dd.dir, 'WT.ChTS.mon.csv')
 #Local file for OIMB pier monthly flood-tide water temp means
-oimbwt.file <- file.path(dd.dir, 'WT.OIMB.mon.csv')
+oimbwt.file <- file.path(hand.dir, 'WT.OIMB.mon.csv')
 #Local file for OIMB pier daily flood-tide water temp means
-oimbwt.daily.file <- file.path(dd.dir, 'WT.OIMB.daily.csv')
+oimbwt.daily.file <- file.path(hand.dir, 'WT.OIMB.daily.csv')
 #Local file for final blended Charleston coastal water temperature:
 wt.file <- file.path(dd.dir, 'CWT.tbl')
 #Local file for Stonewall Banks buoy monthly SST (created elsewhere)
 buoy.file <- file.path(dd.dir, 'SST.46050.mon.csv')
 
-### 1. Download Charlseston tide station data ###
+### 1. Download Charleston tide station data ###
 
 # Only regenerate if water temp file is missing or more than maxFileAge days old:
 if(!file.exists(tswt.file) ||

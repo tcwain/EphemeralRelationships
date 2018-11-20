@@ -45,26 +45,26 @@ maxFileAge <- 5 # Maximum age of a local data file
     
 dataSrcDefs <- list(PDO=list(Name='PDO',
                       URL='http://jisao.washington.edu/pdo/PDO.latest',
-                      LocFile='PDO.tbl',
+                      LocFile=file.path(dd.dir,'PDO.tbl'),
                       FileFormat='tbl',
                       NumericRows=TRUE,
                       Scrub='\\*',
                       ColNames=c('Year',month.abb)), 
                     NPGO=list(Name='NPGO',
                       URL='http://o3d.org/npgo/data/NPGO.txt',
-                      LocFile='NPGO.tbl',
+                      LocFile=file.path(dd.dir,'NPGO.tbl'),
                       FileFormat='tbl',
                       SkipRows=1:15,
                       ColNames=c('Year','Mon','NPGO')),
                     ONI=list(Name='ONI',
                       URL='http://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt',
-                      LocFile='ONI.tbl',
+                      LocFile=file.path(dd.dir,'ONI.tbl'),
                       FileFormat='tbl',
                       SkipRows=1,
                       ColNames=c('MMM','Year','Tot', 'ONI')),
                     SST.46050=list(Name='SST.46050',
                       #No URL here, processed by separate script
-                      LocFile='SST.46050.tbl',
+                      LocFile=file.path(dd.dir,'SST.46050.tbl'),
                       FileFormat='tbl',
                       SkipRows=1,
                       ColNames=c('YY', 'MM', 'DD', 'hh', 'mm', 
@@ -73,18 +73,19 @@ dataSrcDefs <- list(PDO=list(Name='PDO',
                         'DEWP', 'VIS', 'TIDE')),
                     CWT=list(Name='CWT',
                       #No URL here, processed by separate script
-                      LocFile='CWT.tbl',
+                      LocFile=file.path(dd.dir,'CWT.tbl'),
                       FileFormat='tbl',
                       SkipRows=1,
                       ColNames=c('Year',month.abb)),
-                      UWI=list(Name='UWI',
+                    UWI=list(Name='UWI',
                       URL='https://www.pfeg.noaa.gov/products/PFELData/upwell/daily/p07dayac.all',
-                      LocFile='UWI.tbl',
+                      LocFile=file.path(dd.dir,'UWI.tbl'),
                       FileFormat='tbl',
                       SkipRows=1:6,
                       ColNames=c('Date', 'UWI')),
                     SPR.TRANS=list(Name='SPR.TRANS',
-                      LocFile='SpringTrans.csv',
+                      #No URL here, hand-edit
+                      LocFile=file.path(hand.dir,'SpringTrans.csv'),
                       FileFormat='csv',
                       SkipRows=1:2,
                       ColNames=c('Year','OSCURS','Logerwell','Peterson','CBR'))
@@ -130,7 +131,7 @@ update.dataset <- function(url, dataFile, maxAge=20) {
 
 for (srcdef in dataSrcDefs) {
     update.dataset(url=srcdef$URL, 
-                   dataFile=file.path(dd.dir, srcdef$LocFile),
+                   dataFile=srcdef$LocFile,
                    maxAge=maxFileAge)
 }
 
@@ -146,9 +147,9 @@ for (srcdef in dataSrcDefs) {
 ##      getting data from past years. WHAT A PAIN!
 
 .srcdef <- dataSrcDefs$SST.46050
-.dataFile <- file.path(dd.dir, .srcdef$LocFile)
+.dataFile <- .srcdef$LocFile
 if(!file.exists(.dataFile) ||
-   difftime(Sys.time(), file.info(.dataFile)$mtime, units='days') > maxFileAge) {
+    difftime(Sys.time(), file.info(.dataFile)$mtime, units='days') > maxFileAge) {
   cat('Updating ', .dataFile, ' with UpdateNBDCData.R script.\n')
   source('UpdateNBDCData.R', echo=T)
   updateNBDCdata(buoyID='46050', startYr=1991, startMon=1, 
@@ -167,7 +168,7 @@ if(!file.exists(.dataFile) ||
 ##     Otherwise, tide station data is updated.
 
 .srcdef <- dataSrcDefs$CWT
-.dataFile <- file.path(dd.dir, .srcdef$LocFile)
+.dataFile <- .srcdef$LocFile
 # Check if data file exists, if not generate from scratch:
 if ( !file.exists(.dataFile) ||
      difftime(Sys.time(), file.info(.dataFile)$mtime, units='days') > maxFileAge) {
@@ -199,7 +200,7 @@ if ( !file.exists(.dataFile) ||
 readRawDataFile <- function(srcdef) {
   .name <- srcdef$Name
   .raw.name <- paste(.name, '.raw', sep='')
-  .fn <- file.path(dd.dir, srcdef$LocFile)
+  .fn <- srcdef$LocFile
   if (file.exists(.fn)) {
     if (!is.null(srcdef$SkipRows)) {
       #Skip specific rows in file:

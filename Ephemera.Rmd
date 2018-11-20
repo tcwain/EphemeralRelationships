@@ -47,7 +47,8 @@ if (UPDATE.DATA) {
   list.files()
   
   d.dir <- file.path('..', 'Data') # Data directory
-  dd.dir <- file.path(d.dir, 'Download') #Downloaded data directory
+  dd.dir <- file.path(d.dir, 'Download') # Downloaded data directory
+  hand.dir <- file.path(d.dir, 'HandEdit') # Hand-edit data directory
 
   cat('\nUpdating source datasets.\n')
   source('UpdateData.R', echo=T)
