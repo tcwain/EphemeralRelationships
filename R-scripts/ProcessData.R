@@ -38,18 +38,6 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Freq='Monthly',
                       SourceTag='www.o3d.org/npgo',
                       SrcName='NPGO'),
-                    # NPI=list(Name='NPI',
-                    #   Title='North Pacific Index',
-                    #   Units='hPa - 1000',
-                    #   Freq='Monthly',
-                    #   SourceTag='Jim Hurrell, NCAR',
-                    #   SrcName='NPI'),
-                    # MEI=list(Name='MEI',
-                    #   Title='Multivariate ENSO Index',
-                    #   Units='Std. Dev.',
-                    #   Freq='Monthly',
-                    #   SourceTag='Klaus Wolter, NOAA/ESRL',
-                    #   SrcName='MEI'),
                     ONI=list(Name='ONI',
                       #Title=expression(Oceanic ~~ Ni * tilde(n) * o ~~ Index),
                       Title='Oceanic Niño Index',
@@ -57,18 +45,6 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Freq='Monthly',
                       SourceTag='NOAA Climate Prediction Center',
                       SrcName='ONI'),
-                    # SLP.45N=list(Name='SLP.45N',
-                    #   Title='Sea Level Pressure at 45N, 125W',
-                    #   Units='mb',
-                    #   Freq='Monthly',
-                    #   SourceTag='NOAA NCEP/NCAR Reanalysis I',
-                    #   SrcName='SLP'),
-                    # ASL.45N=list(Name='ASL.45N',
-                    #   Title='Adjusted Sea Level Height at South Beach',
-                    #   Units='mm',
-                    #   Freq='Monthly',
-                    #   SourceTag='GLOSS/CLIVAR, Univ. of Hawaii',
-                    #   SrcName='SLHraw'),
                     SST.46050=list(Name='SST.46050',
                       Title='Sea Surface Temperature, Buoy 46050',
                       Units=expression(degree * C),
@@ -81,12 +57,6 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Freq='Monthly',
                       SourceTag='NOAA National Ocean Service',
                       SrcName='CWT'),
-                    # BFL=list(Name='BFL',
-                    #   Title='Columbia River Discharge at Bonneville',
-                    #   Units='Kcfs',
-                    #   Freq='Monthly',
-                    #   SourceTag='USACE Columbia Basin Water Management Div.',
-                    #   SrcName='BFL'),
                     UWI=list(Name='UWI',
                       Title='Coastal Upwelling Index',
                       Units=expression(m^3 * s^{-1} * (100*m)^{-1}),
@@ -132,66 +102,6 @@ colnames(NPGO.mon) <- c('Year', month.abb)
 .data <- .raw$NPGO
 .decyr <- min(.raw$Year) + (1:length(.data) - 0.5)/12
 NPGO.ts <-  data.frame(DecYr=.decyr, Data=.data)
-
-##          NPI (North Pacific Index)
-##            file has two numeric columns:  Year/Month (YYYYMM) , and 
-##            the index:
-
-# cat(' * Processing NPI *\n')
-# .dsd <- dataSetDefs$NPI
-# .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# # Recode missing values (-99)
-# .raw$NPI[.raw$NPI < -90] <- NA
-# .yr <- floor(.raw$YYYYMM/100)
-# .mo <- round(.raw$YYYYMM - .yr*100)
-# NPI.mon <- cbind(sort(unique(.yr)), 
-#                   tapply(.raw$NPI, 
-#                         list(Year=.yr, Mon=.mo), 
-#                         mean, na.rm=T))
-# colnames(NPI.mon) <- c('Year', month.abb)
-# .data <- .raw$NPI
-# .decyr <- min(.yr) + (1:length(.data) - 0.5)/12
-# NPI.ts <-  data.frame(DecYr=.decyr, Data=.data)
-# rm(.yr, .mo)
-
-##          MEI (Multivariate ENSO Index)
-##            is already a monthly table, so not much to do:
-
-# cat(' * Processing MEI *\n')
-# .dsd <- dataSetDefs$MEI
-# .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# MEI.mon <- .raw
-# .data <- as.vector(t(MEI.mon[ , -1]))
-# .decyr <- min(MEI.mon$Year) + (1:length(.data) - 0.5)/12
-# MEI.ts <- data.frame(DecYr=.decyr, Data=.data) 
-
-##          SLP.45 (Sea Level Pressure @ 45 N)
-##            file has four columns:  first is Date (YYYY-MM-DD),
-##            rest are Sea-Level Pressure (mb) for latitudes
-##            42.5, 45, 47.5 North:
-
-# cat(' * Processing SLP.45 *\n')
-# .dsd <- dataSetDefs$SLP.45N
-# .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# .yr <- as.numeric(format(as.Date(.raw$Date),'%Y'))
-# .mon <- as.numeric(format(as.Date(.raw$Date),'%m'))
-# SLP.45N.mon <- tapply(.raw[['lat45.0N']], list(Year=.yr, Mon=.mon), 
-#                       mean, na.rm=T)
-# SLP.45N.mon <- cbind(sort(unique(.yr)), SLP.45N.mon)
-# dimnames(SLP.45N.mon) <- list(sort(unique(.yr)), c('Year',month.abb))
-# .data <- .raw[['lat45.0N']]
-# .decyr <- min(.yr) + (1:length(.data) - 0.5)/12
-# SLP.45N.ts <-  data.frame(DecYr=.decyr, Data=.data)
-
-##          ASL.45 (Adjusted Sea Level Height at South Beach)
-##            is computed from raw SLH at South Beach with missing
-##            data filled from Crescent City and Neah Bay data, and
-##            adjusted based on sea level pressure. There are three
-##            raw data tables, one for each location. Call a special
-##            script to do this one.
-# cat(' * Processing ASL.45 *\n')
-# .dsd <- dataSetDefs$ASL.45N
-# source('ProcessAdjustedSLH.R', echo=TRUE)
 
 ##          ONI (Oceanic Niño Index)
 ##            file has four columns:  first is three-character 
@@ -252,9 +162,6 @@ if(!file.exists(.monFile) ||
   SST.46050.mon <- tapply(.raw$WTMP, 
                           list(Year=.raw$YY, Mon=.raw$MM), 
                           mean, na.rm=T)
-  # sweep out column means to get monthly anomaly:
-  #.mns <- apply(SST.46050.mon, 2, mean, na.rm=T)
-  #SST.46050.mon <- sweep(SST.46050.mon, 2, .mns)
 
   dimnames(SST.46050.mon) <- list(Year=.yrs, Month=month.abb)
   SST.46050.mon <- data.frame(Year=.yrs, SST.46050.mon)
@@ -272,23 +179,9 @@ cat(' * Processing CWT *\n')
 .dsd <- dataSetDefs$CWT
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
 CWT.mon <- .raw
-# sweep out column means to get monthly anomaly:
-#.mns <- apply(CWT.mon[, -1], 2, mean, na.rm=T)
-#CWT.mon[ , -1] <- sweep(CWT.mon[ , -1], 2, .mns)
 .data <- as.vector(t(CWT.mon[ , -1]))
 .decyr <- min(CWT.mon$Year) + (1:length(.data) - 0.5)/12
 CWT.ts <- data.frame(DecYr=.decyr, Data=.data) 
-
-##          BFL (Columbia River Discharge at Bonneville)
-##            is already a monthly table, so not much to do:
-
-# cat(' * Processing BFL *\n')
-# .dsd <- dataSetDefs$BFL
-# .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# BFL.mon <- .raw
-# .data <- as.vector(t(.raw[ , -1]))
-# .decyr <- min(.raw$Year) + (1:length(.data) - 0.5)/12
-# BFL.ts <- data.frame(DecYr=.decyr, Data=.data) 
 
 cat(' * Processing UWI *\n')
 ##          UWI (Upwelling Index)
@@ -309,9 +202,6 @@ UWI.mon <- tapply(.raw$UWI,
                         mean, na.rm=T)
 UWI.mon <- data.frame(Year=as.numeric(rownames(UWI.mon)), UWI.mon)
 names(UWI.mon) <- c('Year', month.abb)
-# sweep out column means to get monthly anomaly:
-#.mns <- apply(UWI.mon[, -1], 2, mean, na.rm=T)
-#UWI.mon[ ,-1] <- sweep(UWI.mon[ ,-1], 2, .mns)
 .data <- as.vector(t(UWI.mon[ , -1]))
 .decyr <- min(UWI.mon$Year) + (1:length(.data) - 0.5)/12
 UWI.ts <- data.frame(DecYr=.decyr, Data=.data) 
@@ -326,8 +216,6 @@ cat(' * Processing SPT.LGR *\n')
 SPT.LGR.ann <- data.frame(DecYr=.raw$Year, Data=.raw$Logerwell)
 # Sort by year:
 SPT.LGR.ann <- SPT.LGR.ann[order(SPT.LGR.ann$DecYr), ]
-# Truncate NA's before 1969:
-##SPT.LGR.ann <- SPT.LGR.ann[SPT.LGR.ann$DecYr >= 1969, ]
 SPT.LGR.ts <- SPT.LGR.ann
 
 ##     SAVE TABLES TO LOCAL DATA DIRECTORY
