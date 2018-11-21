@@ -51,13 +51,13 @@ if (UPDATE.DATA) {
   hand.dir <- file.path(d.dir, 'HandEdit') # Hand-edit data directory
 
   cat('\nUpdating source datasets.\n')
-  source('UpdateData.R', echo=T)
+  source('UpdateData.R', echo=F)
   
   cat('\nComputing derived datasets.\n')
-  source('ProcessData.R', echo=T)
+  source('ProcessData.R', echo=F)
   
-  cat('\nWriting Physical_3mo.dat analysis file.\n')
-  source('WritePhysical3mo.R', echo=T)
+  cat('\nWriting final analysis file.\n')
+  source('ConsolidateData.R', echo=F)
   
   setwd(olddir) # Restore working directory
 }
