@@ -51,13 +51,13 @@ if (UPDATE.DATA) {
   hand.dir <- file.path(d.dir, 'HandEdit') # Hand-edit data directory
 
   cat('\nUpdating source datasets.\n')
-  source('UpdateData.R', echo=F)
+  source('UpdateData.R', echo=T)
   
   cat('\nComputing derived datasets.\n')
-  source('ProcessData.R', echo=F)
+  source('ProcessData.R', echo=T)
   
   cat('\nWriting final analysis file.\n')
-  source('ConsolidateData.R', echo=F)
+  source('ConsolidateData.R', echo=T)
   
   setwd(olddir) # Restore working directory
 }
@@ -66,16 +66,15 @@ if (UPDATE.DATA) {
 Read in the data. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: hatch year (year 0), ocean entry year (year 1), and return year (year 2). This eliminates series MEI, which was stored as 2-month averages instead of 3-month averages (no idea why) -- MEI was highly correlated with ONI anyway.
 
 ```{r ReadPhysData}
-dataDir <- file.path(".", "Data")
 # Coho population data:
-popdata <- read.table(file.path(dataDir, "OCN_Rivers.dat"), header=TRUE)
+popdata <- read.table(file.path(hand.dir, "OCN_Rivers.dat"), header=TRUE)
 popdata$logAD <- log(popdata$ADULTS)  # log-tranformed adults
 # Shift popdata so year is hatch year (return year - 2)
 popdata$YEAR <- popdata$YEAR - 2
 # Filter out missing values
 popdata <- popdata[!is.na(popdata$ADULTS), ]
 # Environmental data:
-envdata <- read.table(file.path(dataDir, "Physical_3mo.dat"), header=TRUE)
+envdata <- read.table(file.path(d.dir, "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
 names(envdata) <- sub('NPGO_', 'NPG_', names(envdata))
 # shorten season abbreviations for four seasons:
