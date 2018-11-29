@@ -67,8 +67,20 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Title='Spring Transition (Logerwell)',
                       Units='Day of Year',
                       Freq='Annual',
-                      SourceTag='www.cbr.washington.edu',
-                      SrcName='SPR.TRANS'))
+                      SourceTag='PFMC PreSeason Report I',
+                      SrcName='SPR.TRANS'),
+                    OCN.RCR.ann=list(Name='OCN.RCR',
+                      Title='OCNR Coho Recruits (lagged to ocean entry, y-2)',
+                      Units='Thousands',
+                      Freq='Annual',
+                      SourceTag='PFMC PreSeason Report I',
+                      SrcName='OCN.RIV'),
+                    OCN.SPN=list(Name='OCN.SPN',
+                      Title='OCNR Coho Spawners (lagged to ocean entry, y+1)',
+                      Units='Thousands',
+                      Freq='Annual',
+                      SourceTag='PFMC PreSeason Report I',
+                      SrcName='OCN.RIV'))
 
 ##     PROCESS DATASETS
 
@@ -217,6 +229,28 @@ SPT.LGR.ann <- data.frame(DecYr=.raw$Year, Data=.raw$Logerwell)
 # Sort by year:
 SPT.LGR.ann <- SPT.LGR.ann[order(SPT.LGR.ann$DecYr), ]
 SPT.LGR.ts <- SPT.LGR.ann
+
+##          OCN.RCR (OCNR Recruits)
+
+cat(' * Processing OCN.RCR *\n')
+.dsd <- dataSetDefs$OCN.RCR
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+# Lag data to ocean entry year:
+OCN.RCR.ann <- data.frame(DecYr=.raw$YEAR-2, Data=.raw$ADULTS)
+# Sort by year:
+OCN.RCR.ann <- OCN.RCR.ann[order(OCN.RCR.ann$DecYr), ]
+OCN.RCR.ts <- OCN.RCR.ann
+
+##          OCN.SPN (OCNR Spawners)
+
+cat(' * Processing OCN.SPN *\n')
+.dsd <- dataSetDefs$OCN.SPN
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+# Lag data to ocean entry year:
+OCN.SPN.ann <- data.frame(DecYr=.raw$YEAR-2, Data=.raw$SPAWNERS)
+# Sort by year:
+OCN.SPN.ann <- OCN.SPN.ann[order(OCN.SPN.ann$DecYr), ]
+OCN.SPN.ts <- OCN.SPN.ann
 
 ##     SAVE TABLES TO LOCAL DATA DIRECTORY
 

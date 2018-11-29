@@ -26,7 +26,8 @@ HTML, PDF, and MS Word documents. For more details on using R Markdown see
 
 ## Data
 
-Update the environmental data sets, if desired (edit value of "UPDATE.DATA"). 
+Update the environmental data sets, if desired (edit value of "UPDATE.DATA"). This only needs to
+be done if the file "AnalysisData.csv" is out-of-date.
 
 **Warning**: Updating data is error-prone, as URLs and file formats change frequently. 
 Check output for warnings and errors and correct the UpdateData and ProcessData scripts 
@@ -65,51 +66,38 @@ if (UPDATE.DATA) {
 
 Read in the data. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: hatch year (year 0), ocean entry year (year 1), and return year (year 2). This eliminates series MEI, which was stored as 2-month averages instead of 3-month averages (no idea why) -- MEI was highly correlated with ONI anyway.
 
-**TODO**: move to data processing scripts!
-
-```{r ReadPopData}
-# Coho population data:
-popdata <- read.table(file.path("Data", "HandEdit", "OCN_Rivers.dat"), header=TRUE)
-popdata$logAD <- log(popdata$ADULTS)  # log-tranformed adults
-# Shift popdata so year is hatch year (return year - 2)
-popdata$YEAR <- popdata$YEAR - 2
-# Filter out missing values
-popdata <- popdata[!is.na(popdata$ADULTS), ]
-```
-
-**TODO**: Revise for new data structure!
-
 ```{r ReadData}
 # Environmental data:
-envdata <- read.table(file.path(d.dir, "AnalysisData.csv"), header=TRUE)
+analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
-names(envdata) <- sub('NPGO_', 'NPG_', names(envdata))
-# shorten season abbreviations for four seasons:
-names(envdata) <- sub('_JFM', '_Wi', names(envdata))
-names(envdata) <- sub('_AMJ', '_Sp', names(envdata))
-names(envdata) <- sub('_JAS', '_Su', names(envdata))
-names(envdata) <- sub('_OND', '_Fa', names(envdata))
-##newdata <- cbind(YEAR=envdata$YEAR, SPR.TRN=envdata$SPR.TRN,
-## No spring transition for now (messes up seasonal panel plots)
-newdata <- cbind(YEAR=envdata$YEAR,
-                 envdata[ , grep('_Wi', colnames(envdata))],
-                 envdata[ , grep('_Sp', colnames(envdata))],
-                 envdata[ , grep('_Su', colnames(envdata))],
-                 envdata[ , grep('_Fa', colnames(envdata))])
-lag0 <- newdata[1:(nrow(newdata)-2), ]
-names(lag0) <- paste0(names(lag0), '_FW0') # Freshwater, year 0
-lag1 <- newdata[2:(nrow(newdata)-1), ]
-names(lag1) <- paste0(names(lag1), '_Oc1') # Ocean entry, year 1
-lag2 <- newdata[3:(nrow(newdata)), ]
-names(lag2) <- paste0(names(lag2), '_Oc2') # Ocean year 2, spawning
-envdata <- cbind(YEAR=lag0$`YEAR_FW0`, lag0[ , -1], lag1[ , -1], lag2[ , -1])
-envdata <- envdata[ , order(substr(names(envdata), 1, 3))]
-rm(newdata, lag0, lag1, lag2)
-# Make sure both data sets cover same set of years:
-envdata <- envdata[envdata$YEAR %in% popdata$YEAR, ]
-popdata <- popdata[popdata$YEAR %in% envdata$YEAR, ]
-plot(popdata$YEAR, popdata$ADULTS, type='l', fg='grey', col='blue', 
-     lwd=2, log='y',      xlab='Year', ylab='Abundance (1000\`s)', 
+names(analdata) <- sub('NPGO_', 'NPG_', names(analdata))
+# # shorten season abbreviations for four seasons:
+# names(analdata) <- sub('_JFM', '_Wi', names(analdata))
+# names(analdata) <- sub('_AMJ', '_Sp', names(analdata))
+# names(analdata) <- sub('_JAS', '_Su', names(analdata))
+# names(analdata) <- sub('_OND', '_Fa', names(analdata))
+# ##newdata <- cbind(YEAR=analdata$YEAR, SPR.TRN=analdata$SPR.TRN,
+# ## No spring transition for now (messes up seasonal panel plots)
+# newdata <- cbind(YEAR=analdata$YEAR,
+#                  analdata[ , grep('_Wi', colnames(analdata))],
+#                  analdata[ , grep('_Sp', colnames(analdata))],
+#                  analdata[ , grep('_Su', colnames(analdata))],
+#                  analdata[ , grep('_Fa', colnames(analdata))])
+# lag0 <- newdata[1:(nrow(newdata)-2), ]
+# names(lag0) <- paste0(names(lag0), '_FW0') # Freshwater, year 0
+# lag1 <- newdata[2:(nrow(newdata)-1), ]
+# names(lag1) <- paste0(names(lag1), '_Oc1') # Ocean entry, year 1
+# lag2 <- newdata[3:(nrow(newdata)), ]
+# names(lag2) <- paste0(names(lag2), '_Oc2') # Ocean year 2, spawning
+# analdata <- cbind(YEAR=lag0$`YEAR_FW0`, lag0[ , -1], lag1[ , -1], lag2[ , -1])
+# analdata <- analdata[ , order(substr(names(analdata), 1, 3))]
+# rm(newdata, lag0, lag1, lag2)
+# # Make sure both data sets cover same set of years:
+# analdata <- analdata[analdata$YEAR %in% popdata$YEAR, ]
+# popdata <- popdata[popdata$YEAR %in% analdata$YEAR, ]
+analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with OCN recruit data.
+plot(analdata$YEAR, analdata$OCN.RCR, type='l', fg='grey', col='blue', 
+     lwd=2, log='y', xlab='Year of Ocean Entry', ylab='Abundance (1000\`s)', 
      main= 'OCNR Coho Adult Recruits')
 ```
 
@@ -138,12 +126,10 @@ print(head(biodata))
 Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively with other varialbles.
 
 ```{r SelectPredictors}
-predictors <- envdata # Whole data set
+predictors <- analdata[ , !grepl('OCN.RCR', names(analdata))]  # Whole data set except OCN Recruits
 ## reverse sign on some predictors to have consistent +/- regr. slopes
 predictors[ , grep('NPG_', colnames(predictors))] <- 
   - predictors[ , grep('NPG_', colnames(predictors))]
-predictors[ , grep('NPI_', colnames(predictors))] <- 
-  - predictors[ , grep('NPI_', colnames(predictors))]
 predictors[ , grep('UWI_', colnames(predictors))] <- 
   - predictors[ , grep('UWI_', colnames(predictors))]
 plot.names <- colnames(predictors)   # FUTURE: Pretty names
@@ -289,12 +275,13 @@ Compute skill and sign of relationship for all years and scales across selected 
 ```{r AnalLoop}
 if (!exists("ss.out")) {
   library(parallel)
-  mc <- floor(detectCores()/2)
+  mc <- max(1, floor(detectCores()/2)) # use ca. half of available processors
   preds <- as.list(names(predictors))
   names(preds) <- names(predictors)   # so result is a named list
   ss.out <- mclapply(preds, 
                      function (k) {
-                       slpSkill(X=popdata$logAD, Y=predictors[ , k])
+                       x <- log(analdata$OCN.RCR)
+                       slpSkill(X=x, Y=predictors[ , k])
                        },
                      mc.cores=mc)
   rm(mc, preds)
@@ -309,7 +296,7 @@ op <- par(mfrow=c(3,4), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
 for (series in names(ss.out)) {
   cat('Predictor: ', series, '\n')
   ss <- ss.out[[series]]
-  ss$time <- popdata$YEAR[ss$time]
+  ss$time <- analdata$YEAR[ss$time]
   cat('\t Range of Skill: ', round(range(ss$gof, na.rm=TRUE),2), '\n')
 ##  if (max(ss$gof, na.rm=TRUE) > skillthresh) { 
     skillPlot(ss, title=series, dot.scale=1.0) 
@@ -325,7 +312,7 @@ Look at some clustering patterns in the raw data and in the patterns of skill.
 # raw Data
 library(MASS)
 palette(c("gray40",RColorBrewer::brewer.pal(7,"Dark2")))
-dat <- as.matrix(cbind(RECR=popdata$logAD, predictors))
+dat <- as.matrix(cbind(RECR=log(analdata$OCN.RCR), predictors))
 dat <- dat[ !apply(dat, 1, function(x) any(is.na(x))), ]
 image(cor(dat), col=RColorBrewer::brewer.pal(11,'RdBu'))
 d1 <- as.dist(1 - abs(cor(dat)))             # correlation-based distances

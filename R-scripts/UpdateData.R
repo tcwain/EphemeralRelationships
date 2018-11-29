@@ -21,7 +21,7 @@
 #    Can be set to 0 to ensure that everything is up-to-date as of today.
 #    NOTE: this is overridden by some of the specialized download scripts.
 
-maxFileAge <- 5 # Maximum age of a local data file
+maxFileAge <- 30 # Maximum age (days) of a local data file
 
 ##     DATA SOURCE DEFINITIONS
     
@@ -88,8 +88,14 @@ dataSrcDefs <- list(PDO=list(Name='PDO',
                       LocFile=file.path(hand.dir,'SpringTrans.csv'),
                       FileFormat='csv',
                       SkipRows=1:2,
-                      ColNames=c('Year','OSCURS','Logerwell','Peterson','CBR'))
-                    )
+                      ColNames=c('Year','OSCURS','Logerwell','Peterson','CBR')),
+                    OCN.RIV=list(Name='OCN.RIV',
+                      #No URL here, hand-edit
+                      LocFile=file.path(hand.dir,'OCN_Rivers.dat'),
+                      FileFormat='tbl',
+                      SkipRows=1:5,
+                      ColNames=c('YEAR','ADULTS','SPAWNERS'))
+) # dataSrcDefs
 
 ##     UPDATE LOCAL DATA SOURCE FILES
 

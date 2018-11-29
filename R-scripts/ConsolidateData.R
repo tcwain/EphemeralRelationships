@@ -11,7 +11,7 @@
 
 seasonNames <-c('JFM', 'AMJ', 'JAS', 'OND')
 
-.colnames <- c('YEAR', 
+.colnames <- c('YEAR', 'OCN.RCR', 'OCN.SPN',
                paste('PDO_', seasonNames, sep=''), 
                paste('ONI_', seasonNames, sep=''), 
                paste('UWI_', seasonNames, sep=''), 
@@ -60,6 +60,14 @@ print(str(phys3mo))
 phys3mo[ , 'YEAR'] <- .yrs
 print(str(phys3mo))
 
+#  OCN.RCR - Annual Series
+phys3mo[.yrs %in% OCN.RCR.ann$DecYr , 'OCN.RCR'] <-
+  OCN.RCR.ann$Data[OCN.RCR.ann$DecYr %in% .yrs]
+
+#  OCN.SPN - Annual Series
+phys3mo[.yrs %in% OCN.SPN.ann$DecYr , 'OCN.SPN'] <-
+  OCN.SPN.ann$Data[OCN.SPN.ann$DecYr %in% .yrs]
+
 #   PDO
 .cols <- grep('PDO_', .colnames)
 print(.cols)
@@ -88,7 +96,6 @@ phys3mo[ , .names] <- .dat
 phys3mo[ , .names] <- .dat
 
 #  SPR.TRN - Annual Series
-##print(summary(SPT.LGR.ann))
 phys3mo[.yrs %in% SPT.LGR.ann$DecYr , 'SPR.TRN'] <-
   SPT.LGR.ann$Data[SPT.LGR.ann$DecYr %in% .yrs]
 
