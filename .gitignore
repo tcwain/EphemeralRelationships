@@ -18,3 +18,5 @@ Read-and-delete-me
 [Vv]ignettes/*.md
 # ignore downloaded data
 [Dd]ata/[Dd]ownload/*
+# ignore html page files
+*_files/
