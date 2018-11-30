@@ -52,75 +52,26 @@ if (UPDATE.DATA) {
   hand.dir <- file.path(d.dir, 'HandEdit') # Hand-edit data directory
 
   cat('\nUpdating source datasets.\n')
-  source('UpdateData.R', echo=T)
+  source('UpdateData.R', echo=F)
   
   cat('\nComputing derived datasets.\n')
-  source('ProcessData.R', echo=T)
+  source('ProcessData.R', echo=F)
   
   cat('\nWriting final analysis file.\n')
-  source('ConsolidateData.R', echo=T)
+  source('ConsolidateData.R', echo=F)
   
   setwd(olddir) # Restore working directory
 }
 ```
 
-Read in the data. Environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]) across all three years of the coho lifecycle: hatch year (year 0), ocean entry year (year 1), and return year (year 2). This eliminates series MEI, which was stored as 2-month averages instead of 3-month averages (no idea why) -- MEI was highly correlated with ONI anyway.
+Read in the data. Monthly environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]). Annual environmental series are left as is. OCN coho recruits and parental spanwer abundance are lagged to match the environment during ocean entry, so no need to lag within the analysis.
 
 ```{r ReadData}
 # Environmental data:
 analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
 names(analdata) <- sub('NPGO_', 'NPG_', names(analdata))
-# # shorten season abbreviations for four seasons:
-# names(analdata) <- sub('_JFM', '_Wi', names(analdata))
-# names(analdata) <- sub('_AMJ', '_Sp', names(analdata))
-# names(analdata) <- sub('_JAS', '_Su', names(analdata))
-# names(analdata) <- sub('_OND', '_Fa', names(analdata))
-# ##newdata <- cbind(YEAR=analdata$YEAR, SPR.TRN=analdata$SPR.TRN,
-# ## No spring transition for now (messes up seasonal panel plots)
-# newdata <- cbind(YEAR=analdata$YEAR,
-#                  analdata[ , grep('_Wi', colnames(analdata))],
-#                  analdata[ , grep('_Sp', colnames(analdata))],
-#                  analdata[ , grep('_Su', colnames(analdata))],
-#                  analdata[ , grep('_Fa', colnames(analdata))])
-# lag0 <- newdata[1:(nrow(newdata)-2), ]
-# names(lag0) <- paste0(names(lag0), '_FW0') # Freshwater, year 0
-# lag1 <- newdata[2:(nrow(newdata)-1), ]
-# names(lag1) <- paste0(names(lag1), '_Oc1') # Ocean entry, year 1
-# lag2 <- newdata[3:(nrow(newdata)), ]
-# names(lag2) <- paste0(names(lag2), '_Oc2') # Ocean year 2, spawning
-# analdata <- cbind(YEAR=lag0$`YEAR_FW0`, lag0[ , -1], lag1[ , -1], lag2[ , -1])
-# analdata <- analdata[ , order(substr(names(analdata), 1, 3))]
-# rm(newdata, lag0, lag1, lag2)
-# # Make sure both data sets cover same set of years:
-# analdata <- analdata[analdata$YEAR %in% popdata$YEAR, ]
-# popdata <- popdata[popdata$YEAR %in% analdata$YEAR, ]
 analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with OCN recruit data.
-plot(analdata$YEAR, analdata$OCN.RCR, type='l', fg='grey', col='blue', 
-     lwd=2, log='y', xlab='Year of Ocean Entry', ylab='Abundance (1000\`s)', 
-     main= 'OCNR Coho Adult Recruits')
-```
-
-Read in biological data. These are found in the NWFSC "Salmon Forecasting" website "Stoplight Chart". The data table is very messy with blank rows and text notes mixed in. Data series are rows, years are columns. First column is long data series names mixed with notes. Needs to be extracted row-by-row. First row is year and Biological indicators appear to be in rows 12-18. Variables are:
-
-* CPR_Su - Copepod richness anom. (no. species; May-Sept)
-* NCP_Su - N. copepod biomass anom. (mg C m-3; May-Sept)
-* SCP_Su - S. copepod biomass anom. (mg C m-3; May-Sept)
-* BioTrn - Biological transition(day of year)
-* ICH_Wi - Ichthyoplankton biomass (mg C 1000 m-3; Jan-Mar)
-* CHNjuv - Chinook salmon juvenile catches (no. km-1; June)
-* COHjuv - Coho salmon juvenile catches (no. km-1; June)
-
-**TODO:** MOVE to data processing scripts!
-
-```{r ReadBiolData}
-url <- "https://www.nwfsc.noaa.gov/research/divisions/fe/estuarine/oeip/documents/Table%20SF-03.csv"
-bioraw <- read.csv(url, skip=1, header=FALSE)
-## print(bioraw[,1]) #check row labels - make sure row numbers below are OK
-biodata <- data.frame(t(bioraw[c(1, 12:18),2:ncol(bioraw)]))
-rownames(biodata) <- NULL
-names(biodata) <- c("Year", "CPR_Su", "NCP_Su", "SCP_Su", "BioTrn", "ICH_Wi", "CHNjuv", "COHjuv")
-print(head(biodata))
 ```
 
 Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively with other varialbles.

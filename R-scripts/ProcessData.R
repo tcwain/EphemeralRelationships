@@ -80,7 +80,56 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Units='Thousands',
                       Freq='Annual',
                       SourceTag='PFMC PreSeason Report I',
-                      SrcName='OCN.RIV'))
+                      SrcName='OCN.RIV'),
+                    COP.RCH=list(Name='COP.RCH',
+                                 Title='Copepod Species Richness',
+                                 Units='Number of Species',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    COP.NAN=list(Name='COP.NAN',
+                                 Title='Northern Copepod Anomaly',
+                                 Units='mg C m^-3',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    COP.SAN=list(Name='COP.SAN',
+                                 Title='Southern Copepod Anomaly',
+                                 Units='mg C m^-3',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    SPT.BIO=list(Name='SPT.BIO',
+                                 Title='Biological Transition',
+                                 Units='Day of Year',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    TMP.DP=list(Name='TMP.DP',
+                                 Title='Deep Temperature',
+                                 Units='Degrees C',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    SAL.DP=list(Name='SAL.DP',
+                                 Title='Deep Salinity',
+                                 Units='PSU',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    ICH.BIO=list(Name='ICH.BIO',
+                                 Title='Ichthyoplankton Biomass',
+                                 Units='mg C (1000 m^3)^-1',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL'),
+                    ICH.COM=list(Name='ICH.COM',
+                                 Title='Ichthyoplankton Community Index',
+                                 Units='unitless',
+                                 Freq='Annual',
+                                 SourceTag='NOAA/NWFSC Fish Ecology Division',
+                                 SrcName='NHL')
+)
 
 ##     PROCESS DATASETS
 
@@ -124,7 +173,7 @@ NPGO.ts <-  data.frame(DecYr=.decyr, Data=.data)
 cat(' * Processing ONI *\n')
 .dsd <- dataSetDefs$ONI
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-print(summary(.raw))  ###DEBUG###
+# print(summary(.raw))  ###DEBUG###
 ONI.mon <- cbind(sort(unique(as.numeric(.raw$Year))), 
                  matrix(c(as.numeric(.raw$ONI),
                           rep(NA, 12-length(.raw$ONI)%%12)), 
@@ -237,8 +286,6 @@ cat(' * Processing OCN.RCR *\n')
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
 # Lag data to ocean entry year:
 OCN.RCR.ann <- data.frame(DecYr=.raw$YEAR-2, Data=.raw$ADULTS)
-# Sort by year:
-OCN.RCR.ann <- OCN.RCR.ann[order(OCN.RCR.ann$DecYr), ]
 OCN.RCR.ts <- OCN.RCR.ann
 
 ##          OCN.SPN (OCNR Spawners)
@@ -248,9 +295,66 @@ cat(' * Processing OCN.SPN *\n')
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
 # Lag data to ocean entry year:
 OCN.SPN.ann <- data.frame(DecYr=.raw$YEAR-2, Data=.raw$SPAWNERS)
-# Sort by year:
-OCN.SPN.ann <- OCN.SPN.ann[order(OCN.SPN.ann$DecYr), ]
 OCN.SPN.ts <- OCN.SPN.ann
+
+##     NEWPORT LINE DATA:
+
+##     COP.RCH (Copepod richness anom. (no. species; May-Sept))
+
+cat(' * Processing COP.RCH *\n')
+.dsd <- dataSetDefs$COP.RCH
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+COP.RCH.ann <- data.frame(DecYr=.raw$Year, Data=.raw$CopRch)
+
+##     COP.NAN (N. copepod biomass anom. (mg C m-3; May-Sept))
+
+cat(' * Processing COP.NAN *\n')
+.dsd <- dataSetDefs$COP.NAN
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+COP.NAN.ann <- data.frame(DecYr=.raw$Year, Data=.raw$CopNan)
+
+##     COP.SAN (S. copepod biomass anom. (mg C m-3; May-Sept))
+
+cat(' * Processing COP.SAN *\n')
+.dsd <- dataSetDefs$COP.SAN
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+COP.SAN.ann <- data.frame(DecYr=.raw$Year, Data=.raw$CopSan)
+
+##     SPT.BIO (Biological spring transition(day of year))
+
+cat(' * Processing SPT.BIO *\n')
+.dsd <- dataSetDefs$SPT.BIO
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+SPT.BIO.ann <- data.frame(DecYr=.raw$Year, Data=.raw$BioTrn)
+
+##     TMP.DP (Deep temperature (deg C, May-Sept))
+
+cat(' * Processing TMP.DP *\n')
+.dsd <- dataSetDefs$TMP.DP
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+TMP.DP.ann <- data.frame(DecYr=.raw$Year, Data=.raw$TmpDp)
+
+##     SAL.DP (Deep salinity (May-Sep))
+
+cat(' * Processing SAL.DP *\n')
+.dsd <- dataSetDefs$SAL.DP
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+SAL.DP.ann <- data.frame(DecYr=.raw$Year, Data=.raw$SalDp)
+
+##     ICH.BIO (Ichthyoplankton biomass (mg C 1000 m-3; Jan-Mar))
+
+cat(' * Processing ICH.BIO *\n')
+.dsd <- dataSetDefs$ICH.BIO
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+ICH.BIO.ann <- data.frame(DecYr=.raw$Year, Data=.raw$IchBio)
+
+##     ICH.COM (Ichthyoplankton community index (Jan-Mar))
+
+cat(' * Processing ICH.COM *\n')
+.dsd <- dataSetDefs$ICH.COM
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+ICH.COM.ann <- data.frame(DecYr=.raw$Year, Data=.raw$IchCom)
+
 
 ##     SAVE TABLES TO LOCAL DATA DIRECTORY
 

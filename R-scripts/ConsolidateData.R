@@ -17,8 +17,9 @@ seasonNames <-c('JFM', 'AMJ', 'JAS', 'OND')
                paste('UWI_', seasonNames, sep=''), 
                paste('SST_', seasonNames, sep=''), 
                paste('NPGO_', seasonNames, sep=''), 
-               'SPR.TRN')
-print(.colnames)
+               'SPT.LGR', 'SPT.BIO', 'COP.RCH', 'COP.NAN', 'COP.SAN', 
+               'TMP.DP', 'SAL.DP', 'ICH.BIO', 'ICH.COM')
+# print(.colnames)  ### DEBUG ###
 .nseries <- length(.colnames)
 cat('\nNumber of series: ', .nseries, '\n')
 
@@ -52,13 +53,13 @@ seasAve <- function(montbl) {
 # Create the result matrix:
 phys3mo <- as.data.frame(matrix(NA, ncol=.nseries, nrow=.nyrs,
                   dimnames=list(.yrs, .colnames)))
-print(str(phys3mo))
+# print(str(phys3mo))  ### DEBUG ###
 
 # Process the variables in order:
 
 #   YEAR
 phys3mo[ , 'YEAR'] <- .yrs
-print(str(phys3mo))
+# print(str(phys3mo))  ### DEBUG ###
 
 #  OCN.RCR - Annual Series
 phys3mo[.yrs %in% OCN.RCR.ann$DecYr , 'OCN.RCR'] <-
@@ -70,9 +71,8 @@ phys3mo[.yrs %in% OCN.SPN.ann$DecYr , 'OCN.SPN'] <-
 
 #   PDO
 .cols <- grep('PDO_', .colnames)
-print(.cols)
 .dat <- seasAve(PDO.mon)
-print(str(.dat))
+# print(str(.dat))  ### DEBUG ###
 phys3mo[ , .cols] <- .dat
 
 #   ONI
@@ -95,9 +95,50 @@ phys3mo[ , .names] <- .dat
 .dat <- seasAve(NPGO.mon)
 phys3mo[ , .names] <- .dat
 
-#  SPR.TRN - Annual Series
-phys3mo[.yrs %in% SPT.LGR.ann$DecYr , 'SPR.TRN'] <-
+#  SPT.LGR - Annual Series
+phys3mo[.yrs %in% SPT.LGR.ann$DecYr , 'SPT.LGR'] <-
   SPT.LGR.ann$Data[SPT.LGR.ann$DecYr %in% .yrs]
+
+# SPT.BIO - Annual Series
+phys3mo[.yrs %in% SPT.BIO.ann$DecYr , 'SPT.BIO'] <-
+  SPT.BIO.ann$Data[SPT.BIO.ann$DecYr %in% .yrs]
+
+# 'COP.RCH'
+# COP.RCH - Annual Series
+phys3mo[.yrs %in% COP.RCH.ann$DecYr , 'COP.RCH'] <-
+  COP.RCH.ann$Data[COP.RCH.ann$DecYr %in% .yrs]
+
+# 'COP.NAN'
+# COP.NAN - Annual Series
+phys3mo[.yrs %in% COP.NAN.ann$DecYr , 'COP.NAN'] <-
+  COP.NAN.ann$Data[COP.NAN.ann$DecYr %in% .yrs]
+
+# 'COP.SAN'
+# COP.SAN - Annual Series
+phys3mo[.yrs %in% COP.SAN.ann$DecYr , 'COP.SAN'] <-
+  COP.SAN.ann$Data[COP.SAN.ann$DecYr %in% .yrs]
+
+# 'TMP.DP'
+# TMP.DP - Annual Series
+phys3mo[.yrs %in% TMP.DP.ann$DecYr , 'TMP.DP'] <-
+  TMP.DP.ann$Data[TMP.DP.ann$DecYr %in% .yrs]
+
+# 'SAL.DP'
+# SAL.DP - Annual Series
+phys3mo[.yrs %in% SAL.DP.ann$DecYr , 'SAL.DP'] <-
+  SAL.DP.ann$Data[SAL.DP.ann$DecYr %in% .yrs]
+
+# 'ICH.BIO'
+# ICH.BIO - Annual Series
+phys3mo[.yrs %in% ICH.BIO.ann$DecYr , 'ICH.BIO'] <-
+  ICH.BIO.ann$Data[ICH.BIO.ann$DecYr %in% .yrs]
+
+# 'ICH.COM'
+# ICH.COM - Annual Series
+phys3mo[.yrs %in% ICH.COM.ann$DecYr , 'ICH.COM'] <-
+  ICH.COM.ann$Data[ICH.COM.ann$DecYr %in% .yrs]
+
+## WRITE OUT FINAL ANALYSIS DATA TABLE:
 
 write.csv(phys3mo, file.path(d.dir, 'AnalysisData.csv'),
             row.names=FALSE)

@@ -94,7 +94,14 @@ dataSrcDefs <- list(PDO=list(Name='PDO',
                       LocFile=file.path(hand.dir,'OCN_Rivers.dat'),
                       FileFormat='tbl',
                       SkipRows=1:5,
-                      ColNames=c('YEAR','ADULTS','SPAWNERS'))
+                      ColNames=c('YEAR','ADULTS','SPAWNERS')),
+                    NHL=list(Name='NHL',
+                      #No URL here, needs special processing, below
+                      LocFile=file.path(dd.dir,'StopLight.csv'),
+                      FileFormat='csv',
+                      SkipRows=1,
+                      ColNames=c('Year','CopRch','CopNan','CopSan','BioTrn',
+                                 'TmpDp','SalDp','IchBio','IchCom'))
 ) # dataSrcDefs
 
 ##     UPDATE LOCAL DATA SOURCE FILES
@@ -181,6 +188,33 @@ if ( !file.exists(.dataFile) ||
   cat('Running script GetCharlestonData.R\n')
   source('GetCharlestonData.R', echo=T)
 } # if(!file.exists)
+
+##     NHL (Newport Hydrographic Line) data
+##     These are found in the NWFSC "Salmon Forecasting" website "Stoplight Chart". 
+##     The data table is very messy with blank rows and text notes mixed in. Data series 
+##     are rows, years are columns. First column is long data series names mixed with notes. 
+##     Needs to be extracted row-by-row. First data row is year and Biological indicators 
+##     are in subsequent rows. Variables we want are (row numbers as of November 2018):
+##     
+##     * Year   - Row 1 (after skipping first empty row)
+##     * CopRch - Copepod richness anom. (no. species; May-Sept), row 12
+##     * CopNan - N. copepod biomass anom. (mg C m-3; May-Sept), row 13
+##     * CopSan - S. copepod biomass anom. (mg C m-3; May-Sept), row 14
+##     * BioTrn - Biological transition(day of year), row 15
+##     * TmpDp  - Deep temperature (deg C, May-Sept), row 9
+##     * SalDp  - Deep salinity (May-Sep), row 10
+##     * IchBio - Ichthyoplankton biomass (mg C 1000 m-3; Jan-Mar), row 16
+##     * IchCom - Ichthyoplankton community index (Jan-Mar), row 17
+
+.srcdef <- dataSrcDefs$NHL
+.dataFile <- .srcdef$LocFile
+.raw <- read.csv(file.path(hand.dir,'StopLight-Table.csv'), skip=1, 
+                 header=FALSE, as.is=TRUE)
+.dat <- data.frame(t(.raw[c(1, 12, 13, 14, 15, 9, 10, 16, 17), 2:ncol(.raw)]))
+rownames(.dat) <- NULL
+names(.dat) <- .srcdef$ColNames
+##print(head(.dat))  ### DEBUG ###
+write.csv(.dat, .srcdef$LocFile, row.names=FALSE)
 
 ##     LOAD AND RESTRUCTURE DATA
 
