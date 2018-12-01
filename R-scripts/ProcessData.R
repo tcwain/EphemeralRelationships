@@ -70,13 +70,13 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       SourceTag='PFMC PreSeason Report I',
                       SrcName='SPR.TRANS'),
                     OCN.RCR.ann=list(Name='OCN.RCR',
-                      Title='OCNR Coho Recruits (lagged to ocean entry, y-2)',
+                      Title='OCNR Coho Recruits (lagged to ocean entry, y-1)',
                       Units='Thousands',
                       Freq='Annual',
                       SourceTag='PFMC PreSeason Report I',
                       SrcName='OCN.RIV'),
                     OCN.SPN=list(Name='OCN.SPN',
-                      Title='OCNR Coho Spawners (lagged to ocean entry, y+1)',
+                      Title='OCNR Coho Spawners (lagged to ocean entry, y+2)',
                       Units='Thousands',
                       Freq='Annual',
                       SourceTag='PFMC PreSeason Report I',
@@ -284,8 +284,8 @@ SPT.LGR.ts <- SPT.LGR.ann
 cat(' * Processing OCN.RCR *\n')
 .dsd <- dataSetDefs$OCN.RCR
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# Lag data to ocean entry year:
-OCN.RCR.ann <- data.frame(DecYr=.raw$YEAR-2, Data=.raw$ADULTS)
+# Lag data to ocean entry year (one year prior to return year):
+OCN.RCR.ann <- data.frame(DecYr=.raw$YEAR-1, Data=.raw$ADULTS)
 OCN.RCR.ts <- OCN.RCR.ann
 
 ##          OCN.SPN (OCNR Spawners)
@@ -293,8 +293,8 @@ OCN.RCR.ts <- OCN.RCR.ann
 cat(' * Processing OCN.SPN *\n')
 .dsd <- dataSetDefs$OCN.SPN
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# Lag data to ocean entry year:
-OCN.SPN.ann <- data.frame(DecYr=.raw$YEAR-2, Data=.raw$SPAWNERS)
+# Lag data to ocean entry year (raw data is lagged +3 years, and ocean entry is at age 2)
+OCN.SPN.ann <- data.frame(DecYr=.raw$YEAR-1, Data=.raw$SPAWNERS)
 OCN.SPN.ts <- OCN.SPN.ann
 
 ##     NEWPORT LINE DATA:
