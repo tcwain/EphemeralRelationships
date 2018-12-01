@@ -77,7 +77,7 @@ analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with OCN recru
 Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively with other varialbles.
 
 ```{r SelectPredictors}
-predictors <- analdata[ , !grepl('OCN.RCR', names(analdata))]  # Whole data set except OCN Recruits
+predictors <- analdata[ , -(1:3)]  # Whole data set except Year and OCN coho data
 ## reverse sign on some predictors to have consistent +/- regr. slopes
 predictors[ , grep('NPG_', colnames(predictors))] <- 
   - predictors[ , grep('NPG_', colnames(predictors))]
@@ -105,12 +105,17 @@ loo.skill <- compiler::cmpfun(function(df) {
   # Leave-one-out cross-validation, scaled to skill score, for a 
   #   bivariate linear regr.
   # df is a dataframe with two columns: X & Y
-  ybar <- mean(df$Y)
-  n <- nrow(df)
-  loo.pred <- function(i) predict(lm(Y ~ X, data=df[-i,]), newdata=df[i,])
-  .pred <- sapply(1:n, loo.pred)
-  loo.cvs <- 1 - (n-1) / (n-2) * sum((.pred - df$Y)^2) / sum((ybar - df$Y)^2)
-  return(list(CVS=loo.cvs, X=df$X, Y=df$Y, Pred=.pred))
+  ## check for sufficient data (non-NAs for X & Y in at least 5 cases)
+  if (sum(!is.na(df$X+df$Y)) > 4) { # OK
+    ybar <- mean(df$Y)
+    n <- nrow(df)
+    loo.pred <- function(i) predict(lm(Y ~ X, data=df[-i,]), newdata=df[i,])
+    .pred <- sapply(1:n, loo.pred)
+    loo.cvs <- 1 - (n-1) / (n-2) * sum((.pred - df$Y)^2) / sum((ybar - df$Y)^2)
+    return(list(CVS=loo.cvs, X=df$X, Y=df$Y, Pred=.pred))
+  } else { # Insuffient data
+    return(list(CVS=NA, X=df$X, Y=df$Y, Pred=NULL))
+  } # if (sum...)
 }) # loo.skill
 ```
 
@@ -163,28 +168,41 @@ We want a graphic that shows both the strength of the relationship (skill) and i
 
 In the plot, color indicates sign (blue positive, red negative) and circle size indicates skill. Contours are added at skill levels 0.25 (thin dotted), 0.5 (dashed) and 0.75 (solid).
 
-```{r slopeSkill, fig.height=9, fig.width=9}
+```{r slopeSkill, fig.height=6, fig.width=6}
 slpSkill <- function(X, Y) {
   #return LOO skill and regression slope in one data frame
   loo.res <- tsapply(data.frame(X=X,Y=Y), function(df) {loo.skill(df)$CVS})
   # get regression slopes for color-coding graph
+  ### TODO: fix gof code for missing data cases ###
   slp.res <- tsapply(data.frame(X=X,Y=Y), function(df) {
-    coefficients(lm(Y ~ X, data=df))['X'] })
+    if (sum(!is.na(df$X+df$Y)) > 4) { # OK
+      return(coefficients(lm(Y ~ X, data=df))['X'])
+    } else {
+      return(NA)
+    } # if(sum...)
+  } # function(df)
+  ) # tsapply()
   loo.res$slp <- slp.res$gof
   return(loo.res)
 } # slpSkill()
 
-skillPlot <- function(ss, title="", dot.scale=0.5) {
+skillPlot <- function(ss, title="", dot.scale=0.5, ...) {
   # Plot signed skill on scale v time axis
   ss <- ss[!is.na(ss$gof), ]      # remove na's for interp()
   ss$gof <- pmax(0,ss$gof) # get rid of negative values (very bad fit)
   plot(ss$time, ss$scale, type='n', asp=1.0, xaxs='r', 
-       xlab='Interval Endpoint', ylab='Interval Length')
-  text(min(ss$time), max(ss$scale), title, cex=1.25, adj=c(0, 1), col='black')
-  text(min(ss$time), max(ss$scale) - 0.1 * diff(range(ss$scale)),
+       xlab='Interval Endpoint', ylab='Interval Length', ...)
+  pl.lims <- par('usr') # get X & Y plot limits (Xmin,Xmax,Ymin,Ymax)
+  xrange <- pl.lims[2] - pl.lims[1]
+  yrange <- pl.lims[4] - pl.lims[3]
+#  text(min(ss$time), max(ss$scale), title, cex=1.25, adj=c(0, 1), col='black')
+  text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.05*yrange, title, cex=1.2, adj=c(0, 1), col='black')
+#  text(min(ss$time), max(ss$scale) - 0.1 * diff(range(ss$scale)),
+  text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.1*yrange,
        paste0("Long-term Skill: ", round(ss$gof[ss$scale==max(ss$scale)],2)), 
        cex=1, adj=c(0,1), col='black')
-  text(min(ss$time), max(ss$scale) - 0.17 * diff(range(ss$scale)),
+#  text(min(ss$time), max(ss$scale) - 0.17 * diff(range(ss$scale)),
+  text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.15*yrange,
        paste0("Maximum Skill: ", round(max(ss$gof),2)), 
        cex=1, adj=c(0,1), col='black')
   symbols(ss$time, ss$scale,
@@ -229,28 +247,30 @@ if (!exists("ss.out")) {
   mc <- max(1, floor(detectCores()/2)) # use ca. half of available processors
   preds <- as.list(names(predictors))
   names(preds) <- names(predictors)   # so result is a named list
-  ss.out <- mclapply(preds, 
+##  ss.out <- mclapply(preds, 
+  ss.out <- lapply(preds, 
                      function (k) {
                        x <- log(analdata$OCN.RCR)
                        slpSkill(X=x, Y=predictors[ , k])
-                       },
-                     mc.cores=mc)
+                     }
+  )
+##                     , mc.cores=mc)
   rm(mc, preds)
 } # if (!exists(ss.out))
 ```
 
 Summarize results and plot. Plots are done only for those with skill above a threshold. The X-axis is the year of ocean entry (return year - 1).
 
-```{r Results, fig.height=6, fig.width=9}
+```{r Results, fig.height=6, fig.width=6}
 skillthresh <- 0.00
-op <- par(mfrow=c(3,4), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
+op <- par(mfrow=c(2,2), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
 for (series in names(ss.out)) {
   cat('Predictor: ', series, '\n')
   ss <- ss.out[[series]]
   ss$time <- analdata$YEAR[ss$time]
   cat('\t Range of Skill: ', round(range(ss$gof, na.rm=TRUE),2), '\n')
 ##  if (max(ss$gof, na.rm=TRUE) > skillthresh) { 
-    skillPlot(ss, title=series, dot.scale=1.0) 
+    skillPlot(ss, title=series, dot.scale=1.0, xlim=c(1975,2015), ylim=c(10,50)) 
 ##  } # if
 } # for(series)
 par(op)
@@ -276,7 +296,7 @@ text(data.mds, labels=rownames(data.mds), cex=0.5, col=clcode)
 rm(dat, d1, h1, clcode, data.mds)
 ```
 
-```{r Clustering2, fig.height=9, fig.width=9}
+```{r Clustering2, fig.height=9, fig.width=9, eval=FALSE}
 # cluster based on similarity of skill patterns
 dat <- as.data.frame(lapply(ss.out, "[[", "gof"))
 dat <- dat[, -grep("YEAR",colnames(dat))]
