@@ -24,6 +24,8 @@ knitr::opts_chunk$set(echo = TRUE, fig.height=4, fig.width=6, warning=TRUE)
 HTML, PDF, and MS Word documents. For more details on using R Markdown see 
 <http://rmarkdown.rstudio.com>.
 
+Besides R base and recommended packages, this requires R packages `akima` and `RColorBrewer`.
+
 ## Data
 
 Update the environmental data sets, if desired (edit value of "UPDATE.DATA"). This only needs to
@@ -64,7 +66,7 @@ if (UPDATE.DATA) {
 }
 ```
 
-Read in the data. Monthly environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]). Annual environmental series are left as is. OCN coho recruits and parental spanwer abundance are lagged to match the environment during ocean entry, so no need to lag within the analysis.
+Read in the data. Monthly environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]). Annual environmental series are left as is. OCN coho recruits and parental spanwer abundance are lagged to match the environment during ocean entry, so no need to lag within the analysis; do a plot so we can double check this alignment against published data sets.
 
 ```{r ReadData}
 # Environmental data:
@@ -72,7 +74,16 @@ analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
 names(analdata) <- sub('NPGO_', 'NPG_', names(analdata))
 analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with OCN recruit data.
+# Plot to check data alignment
+with(analdata, {
+  plot(YEAR, scale(OCN.RCR), type='l', ylim=c(-3,3), tck=1);
+  lines(YEAR, scale(OCN.SPN), col=2);
+  lines(YEAR, scale(PDO_AMJ), col=3)
+  })
 ```
+Yes, the data line up properly. The 2011 and 2014 peaks in recruits and spawners are plotted in 
+ocean entry years 2010 and 2013 for recruits returning 1 year later, and in years 2013 and 2016 
+for spawners that entered ocean at age 2.
 
 Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively with other varialbles.
 
