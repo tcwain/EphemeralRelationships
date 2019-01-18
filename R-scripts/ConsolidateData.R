@@ -12,11 +12,11 @@
 seasonNames <-c('JFM', 'AMJ', 'JAS', 'OND')
 
 .colnames <- c('YEAR', 'OCN.RCR', 'OCN.SPN',
-               paste('PDO_', seasonNames, sep=''), 
-               paste('ONI_', seasonNames, sep=''), 
-               paste('UWI_', seasonNames, sep=''), 
-               paste('SST_', seasonNames, sep=''), 
-               paste('NPGO_', seasonNames, sep=''), 
+               paste('PDO.', seasonNames, sep=''), 
+               paste('ONI.', seasonNames, sep=''), 
+               paste('UWI.', seasonNames, sep=''), 
+               paste('SST.', seasonNames, sep=''), 
+               paste('NPGO.', seasonNames, sep=''), 
                'SPT.LGR', 'SPT.BIO', 'COP.RCH', 'COP.NAN', 'COP.SAN', 
                'TMP.DP', 'SAL.DP', 'ICH.BIO', 'ICH.COM')
 # print(.colnames)  ### DEBUG ###
@@ -70,28 +70,28 @@ phys3mo[.yrs %in% OCN.SPN.ann$DecYr , 'OCN.SPN'] <-
   OCN.SPN.ann$Data[OCN.SPN.ann$DecYr %in% .yrs]
 
 #   PDO
-.cols <- grep('PDO_', .colnames)
+.cols <- grep('PDO.', .colnames)
 .dat <- seasAve(PDO.mon)
 # print(str(.dat))  ### DEBUG ###
 phys3mo[ , .cols] <- .dat
 
 #   ONI
-.names <- paste('ONI_', seasonNames, sep='')
+.names <- paste('ONI.', seasonNames, sep='')
 .dat <- seasAve(ONI.mon)
 phys3mo[ , .names] <- .dat
 
 #   UWI
-.names <- paste('UWI_', seasonNames, sep='')
+.names <- paste('UWI.', seasonNames, sep='')
 .dat <- seasAve(UWI.mon)
 phys3mo[ , .names] <- .dat
 
 #   SST
-.names <- paste('SST_', seasonNames, sep='')
+.names <- paste('SST.', seasonNames, sep='')
 .dat <- seasAve(CWT.mon)  #NOTE: data series name differs
 phys3mo[ , .names] <- .dat
 
 #   NPGO
-.names <- paste('NPGO_', seasonNames, sep='')
+.names <- paste('NPGO.', seasonNames, sep='')
 .dat <- seasAve(NPGO.mon)
 phys3mo[ , .names] <- .dat
 

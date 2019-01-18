@@ -72,13 +72,13 @@ Read in the data. Monthly environmental series are restructured to 4 seasons (Wi
 # Environmental data:
 analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
-names(analdata) <- sub('NPGO_', 'NPG_', names(analdata))
+names(analdata) <- sub('NPGO.', 'NPG.', names(analdata))
 analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with OCN recruit data.
 # Plot to check data alignment
 with(analdata, {
   plot(YEAR, scale(OCN.RCR), type='l', ylim=c(-3,3), tck=1);
   lines(YEAR, scale(OCN.SPN), col=2);
-  lines(YEAR, scale(PDO_AMJ), col=3)
+  lines(YEAR, scale(PDO.AMJ), col=3)
   })
 ```
 Yes, the data line up properly. The 2011 and 2014 peaks in recruits and spawners are plotted in 
@@ -90,10 +90,10 @@ Select predictors. Change sign of NPGO, NPI & UWI so they correlate positively w
 ```{r SelectPredictors}
 predictors <- analdata[ , -(1:3)]  # Whole data set except Year and OCN coho data
 ## reverse sign on some predictors to have consistent +/- regr. slopes
-predictors[ , grep('NPG_', colnames(predictors))] <- 
-  - predictors[ , grep('NPG_', colnames(predictors))]
-predictors[ , grep('UWI_', colnames(predictors))] <- 
-  - predictors[ , grep('UWI_', colnames(predictors))]
+predictors[ , grep('NPG.', colnames(predictors))] <- 
+  - predictors[ , grep('NPG.', colnames(predictors))]
+predictors[ , grep('UWI.', colnames(predictors))] <- 
+  - predictors[ , grep('UWI.', colnames(predictors))]
 plot.names <- colnames(predictors)   # FUTURE: Pretty names
 ## Testing - subset of predictors 
 ## predictors <- predictors[ , 1:12]
@@ -242,7 +242,7 @@ for (i in 1:12) {
   X <- arima.sim(n=30, model=list(ar=0.7))
   Y <- arima.sim(n=30, model=list(ar=0.7))
   tst <- slpSkill(X, Y)
-  skillPlot(tst, title=paste0('Tst_AR1_',i))
+  skillPlot(tst, title=paste0('Tst.AR1.',i))
   rm(X, Y, tst)
 }
 par(op)
