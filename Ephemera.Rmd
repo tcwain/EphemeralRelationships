@@ -250,25 +250,24 @@ par(op)
 
 ## Real Data
 
-Compute skill and sign of relationship for all years and scales across selected predictors. (Only run if resulting output doesn't already exist, so to refresh results, delete ``ss.out`` before running.)
+Compute skill and sign of relationship for all years and scales across selected predictors. (This is quite compute-intensive, so run in parallel. Even so, only run if resulting output doesn't already exist, so to refresh results, delete ``ss.out`` before running.)
 
 ```{r AnalLoop}
 if (!exists("ss.out")) {
-  library(parallel)
-  mc <- max(1, floor(detectCores()/2)) # use ca. half of available processors
   preds <- as.list(names(predictors))
   names(preds) <- names(predictors)   # so result is a named list
-##  ss.out <- mclapply(preds, 
-  ss.out <- lapply(preds, 
+  library(parallel)
+  ## mc <- max(1, floor(detectCores()/2)) # use ca. half of available processors
+  mc <- max(1, detectCores() - 1) # use all but one of available processors
+  ss.out <- mclapply(preds, 
                      function (k) {
-                       # log(recruits)
+                       # log(Recruits)
                        x <- log(analdata$OCN.RCR)
                        # log(Recruits/Spawner)
-                       ##x <- log(analdata$OCN.RCR / analdata$OCN.SPN)
+                       ## x <- log(analdata$OCN.RCR / analdata$OCN.SPN)
                        slpSkill(X=x, Y=predictors[ , k])
                      }
-  )
-##                     , mc.cores=mc)
+                     , mc.cores=mc)
   rm(mc, preds)
 } # if (!exists(ss.out))
 ```
