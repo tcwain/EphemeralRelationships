@@ -68,7 +68,7 @@ if (UPDATE.DATA) {
 
 Read in the data. Monthly environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], & Aut [OND]). Annual environmental series are left as is. OCN coho recruits and parental spanwer abundance are lagged to match the environment during ocean entry, so no need to lag within the analysis; do a plot so we can double check this alignment against published data sets.
 
-```{r ReadData}
+```{r ReadData, fig.height=6, fig.width=9}
 # Environmental data:
 analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
@@ -237,7 +237,7 @@ rm(X, Y, tst)
 Generate 12 pairs of random AR(1) series, plot patterns.
 
 ```{r ARtest, fig.height=6, fig.width=9}
-op <- par(mfrow=c(3,4), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
+op <- par(mfrow=c(3,4), mar=c(3,3,1,1), mgp=c(1.5,0.25,0), fg='grey', tck=1)
 for (i in 1:12) {
   X <- arima.sim(n=30, model=list(ar=0.7))
   Y <- arima.sim(n=30, model=list(ar=0.7))
@@ -276,7 +276,7 @@ Summarize results and plot. Plots are done only for those with skill above a thr
 
 ```{r Results, fig.height=6, fig.width=6}
 skillthresh <- 0.00
-op <- par(mfrow=c(2,2), mar=c(2,2,1,1), mgp=c(3,0.5,0), fg='grey', tck=1)
+op <- par(mfrow=c(2,2), mar=c(3,3,1,1), mgp=c(1.5,0.25,0), fg='grey', tck=1)
 for (series in names(ss.out)) {
   cat('Predictor: ', series, '\n')
   ss <- ss.out[[series]]
