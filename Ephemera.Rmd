@@ -261,7 +261,10 @@ if (!exists("ss.out")) {
 ##  ss.out <- mclapply(preds, 
   ss.out <- lapply(preds, 
                      function (k) {
+                       # log(recruits)
                        x <- log(analdata$OCN.RCR)
+                       # log(Recruits/Spawner)
+                       ##x <- log(analdata$OCN.RCR / analdata$OCN.SPN)
                        slpSkill(X=x, Y=predictors[ , k])
                      }
   )
