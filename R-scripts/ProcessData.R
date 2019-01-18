@@ -1,11 +1,12 @@
 ## ProcessData.R
-## Updates physical indicator data for OCN GAM ensemble forecasts.
-## This file is run from the script DowloadPhysicalVars.R
-##   Author:  Tom Wainwright, thomas.wainwright@noaa.gov
+## Updates physical indicator data for OCN forecasts.
+## This file is run from the script Ephemera.Rmd.
+##   Author:  Tom Wainwright, tcwainw@gmail.com
 ##   Created:  13 July 2010
 ##   Last Modified: 22 Apr 2011
 ##                  23 Oct 2012 - Converted from Sweave to plain R
 ##                  24 Jan 2014 - Revised for OCN forecast data sets
+##                  17 Jan 2019 - Minor fixes to comments
 ##     After raw data files are downloaded by the 'UpdateData' script,
 ##     this script reads them individually into R, then uses them to create
 ##     standard monthly and/or annual indicator data series.
