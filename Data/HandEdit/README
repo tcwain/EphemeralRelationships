@@ -15,7 +15,7 @@ before R can read it. First, under "Biological transition," replace "Never"
 with value 270 to indicate a very late transition. Then, delete any other text
 outside of the first column, leaving empty fields (read in as "NA" values).
 
-OCN Rivers Coho Salmon abundance: Updates available in the PFMC Preaseaon 
+OCN Rivers Coho Salmon and OPIH (hatchery) abundance: Updates available in the PFMC Preaseaon 
 Report I, or from ODFW (at present, contact Mark Lewis or Erik Suring).
 
 Buoy 46050 SST data: This is historic monthly data from the Stonewall Banks 

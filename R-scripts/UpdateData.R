@@ -1,5 +1,5 @@
 ## UpdateData.R
-## Updates physical indicator data for OCN forecasts.
+## Updates physical indicator data for Oregon Coastal coho forecasts.
 ## This file is run from the script Ephemera.Rmd
 ##   Author:  Tom Wainwright, tcwainw@gmail.com
 ##   Created:  13 July 2010
@@ -8,6 +8,7 @@
 ##             24 Jan 2014 - Revised for OCN forecast data sets
 ##             12 Nov 2018 - Removed unused data series code
 ##             17 Jan 2019 - Minor fixes to comments
+##             24 Jan 2019 - Added OPIH adult & smolt data
 ##
 ##     This script performs updates of long-term climate data 
 ##     from various web sources and stores them in local files in the 
@@ -96,6 +97,12 @@ dataSrcDefs <- list(PDO=list(Name='PDO',
                       FileFormat='tbl',
                       SkipRows=1:5,
                       ColNames=c('YEAR','ADULTS','SPAWNERS')),
+                    OPIH=list(Name='OPIH',
+                      #No URL here, hand-edit
+                      LocFile=file.path(hand.dir,'OPIHAdSm.csv'),
+                      FileFormat='csv',
+                      SkipRows=1:5,
+                      ColNames=c('AdYEAR','SmYEAR','ADULTS','SMOLTS')),
                     NHL=list(Name='NHL',
                       #No URL here, needs special processing, below
                       LocFile=file.path(dd.dir,'StopLight.csv'),

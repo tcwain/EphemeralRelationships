@@ -1,5 +1,5 @@
 ## ProcessData.R
-## Updates physical indicator data for OCN forecasts.
+## Updates physical indicator data for Oregon Coast coho forecasts.
 ## This file is run from the script Ephemera.Rmd.
 ##   Author:  Tom Wainwright, tcwainw@gmail.com
 ##   Created:  13 July 2010
@@ -7,6 +7,7 @@
 ##                  23 Oct 2012 - Converted from Sweave to plain R
 ##                  24 Jan 2014 - Revised for OCN forecast data sets
 ##                  17 Jan 2019 - Minor fixes to comments
+##                  24 Jan 2019 - Added OPIH adult and smolt data
 ##     After raw data files are downloaded by the 'UpdateData' script,
 ##     this script reads them individually into R, then uses them to create
 ##     standard monthly and/or annual indicator data series.
@@ -70,7 +71,7 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Freq='Annual',
                       SourceTag='PFMC PreSeason Report I',
                       SrcName='SPR.TRANS'),
-                    OCN.RCR.ann=list(Name='OCN.RCR',
+                    OCN.RCR=list(Name='OCN.RCR',
                       Title='OCNR Coho Recruits (lagged to ocean entry, y-1)',
                       Units='Thousands',
                       Freq='Annual',
@@ -82,6 +83,18 @@ dataSetDefs <- list(PDO=list(Name='PDO',
                       Freq='Annual',
                       SourceTag='PFMC PreSeason Report I',
                       SrcName='OCN.RIV'),
+                    OPIH.RC=list(Name='OPIH.RC',
+                      Title='OPIH Coho Recruits (lagged to ocean entry, y+2)',
+                      Units='Thousands',
+                      Freq='Annual',
+                      SourceTag='PFMC PreSeason Report I',
+                      SrcName='OPIH'),
+                    OPIH.SM=list(Name='OPIH.SM',
+                      Title='OPIH Coho Smolts (ocean entry, y)',
+                      Units='Millions',
+                      Freq='Annual',
+                      SourceTag='PFMC PreSeason Report I',
+                      SrcName='OPIH'),
                     COP.RCH=list(Name='COP.RCH',
                                  Title='Copepod Species Richness',
                                  Units='Number of Species',
@@ -297,6 +310,23 @@ cat(' * Processing OCN.SPN *\n')
 # Lag data to ocean entry year (raw data is lagged +3 years, and ocean entry is at age 2)
 OCN.SPN.ann <- data.frame(DecYr=.raw$YEAR-1, Data=.raw$SPAWNERS)
 OCN.SPN.ts <- OCN.SPN.ann
+
+##          OPIH.RC (OPIH Recruits)
+
+cat(' * Processing OPIH.RC *\n')
+.dsd <- dataSetDefs$OPIH.RC
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+# Lag data to ocean entry year (in data file as SmYEAR)
+OPIH.RC.ann <- data.frame(DecYr=.raw$SmYEAR, Data=.raw$ADULTS)
+OPIH.RC.ts <- OPIH.RC.ann
+
+##          OPIH.SM (OPIH Smolts)
+
+cat(' * Processing OPIH.SM *\n')
+.dsd <- dataSetDefs$OPIH.SM
+.raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+OPIH.SM.ann <- data.frame(DecYr=.raw$SmYEAR, Data=.raw$SMOLTS)
+OPIH.SM.ts <- OPIH.SM.ann
 
 ##     NEWPORT LINE DATA:
 
