@@ -1,0 +1,110 @@
+---
+title: "Coho Forecast Time Scales"
+author: "TC Wainwright"
+date: 'Updated: `r Sys.Date()`'
+output:
+  html_document:
+    fig_caption: yes
+    highlight: tango
+    self_contained: no
+    theme: journal
+  pdf_document:
+    fig_caption: yes
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height=4, fig.width=6, warning=TRUE)
+## load(".RData") #not done automatically in interactive knitr session.
+```
+
+**NOTE**: This is an R Markdown document. Markdown is a simple formatting syntax for authoring 
+HTML, PDF, and MS Word documents. For more details on using R Markdown see 
+<http://rmarkdown.rstudio.com>.
+
+Besides R base and recommended packages, this document requires R packages `akima` and
+`RColorBrewer`.
+
+## Introduction
+
+This document details the analyses in Wainwright (2019, [ADD TITLE], Progr. Oceanogr. XX:XXX-XXX).
+
+## Data
+
+### Update the data set
+
+Update the environmental data sets, if desired (set the following flag to ``TRUE``).
+
+```{r UpdateFlag}
+UPDATE.DATA <- FALSE
+```
+This only needs to be done if the file "AnalysisData.csv" is out-of-date.
+
+Monthly environmental series are restructured to 4 seasons (Win [JFM], Spr [AMJ], Sum [JAS], 
+and Aut [OND]). Annual environmental series are left as is. Coho salmon recruits and parental 
+spanwer abundance are lagged to match the environment during ocean entry, so no need to lag 
+within the analysis.
+
+**Warning**: Updating data is error-prone, as URLs and file formats change frequently. 
+Check output for warnings and errors and correct the UpdateData and ProcessData scripts 
+as needed before finalizing the analysis.
+
+**Note**: Biological data (salmon population and "stoplight" datasets) and Loggerwell Spring 
+Transition (SpringTrans.csv)  must be updated by hand, and files put in the "Data/HandEdit" folder! 
+Water temperature historical data (SST.46050.\*, WT.OIMB.\*) files should never change, but must 
+be present.
+
+```{r UpdateData}
+if (UPDATE.DATA) { 
+  options(warn=1)  # Print all messages
+  
+  olddir <- setwd('R-scripts') # Move into scripts directory
+  print(getwd())
+  list.files()
+  
+  d.dir <- file.path('..', 'Data') # Data directory
+  dd.dir <- file.path(d.dir, 'Download') # Downloaded data directory
+  hand.dir <- file.path(d.dir, 'HandEdit') # Hand-edit data directory
+
+  cat('\nUpdating source datasets.\n')
+  source('UpdateData.R', echo=F)
+  
+  cat('\nComputing derived datasets.\n')
+  source('ProcessData.R', echo=F)
+  
+  cat('\nWriting final analysis file.\n')
+  source('ConsolidateData.R', echo=F)
+  
+  setwd(olddir) # Restore working directory
+} else {
+  cat("NO UPDATES REQUESTED.")
+}
+```
+
+Read in the full data set, and do a plot so we can double check the alignment of salmon data 
+against published data sets.
+
+```{r ReadData, fig.height=6, fig.width=9}
+# Environmental data:
+analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
+# shorten NPGO abbrev. to 3 letters:
+names(analdata) <- sub('NPGO.', 'NPG.', names(analdata))
+analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with OCN recruit data.
+# Plot to check data alignment
+with(analdata, {
+  plot(YEAR, scale(OCN.RCR), type='l', ylim=c(-3,3), tck=1, xlab='Year', ylab='Scaled Value');
+  lines(YEAR, scale(OCN.SPN), col=2);
+  lines(YEAR, scale(PDO.AMJ), col=3);
+  lines(YEAR, scale(OPIH.RC), col=1, lty=2);
+  lines(YEAR, scale(OPIH.SM), col=2, lty=2)
+  })
+legend('bottom', c('OCN.RCR','OCN.SPN','PDO.AMJ','OPIH.RC','OPIH.SM'), 
+       col=c(1,2,3,1,2), lty=c(1,1,1,2,2), horiz=TRUE)
+```
+
+Yes, the data line up properly. The 2011 and 2014 peaks in OCN recruits and spawners are plotted in 
+ocean entry years 2010 and 2013 for recruits returning 1 year later, and in years 2013 and 2016 
+for spawners that entered ocean at age 2. 2009 and 2014 peaks in OPIH recruits are correctly 
+plotted one year earlier, and OPIH smolt local peaks in 2007-08 and 2000 are correct.
+
+
