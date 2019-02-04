@@ -16,7 +16,7 @@ seasonNames <-c('JFM', 'AMJ', 'JAS', 'OND')
                paste('PDO.', seasonNames, sep=''), 
                paste('ONI.', seasonNames, sep=''), 
                paste('UWI.', seasonNames, sep=''), 
-               paste('SST.', seasonNames, sep=''), 
+               paste('CWT.', seasonNames, sep=''), 
                paste('NPGO.', seasonNames, sep=''), 
                'SPT.LGR', 'SPT.BIO', 'COP.RCH', 'COP.NAN', 'COP.SAN', 
                'TMP.DP', 'SAL.DP', 'ICH.BIO', 'ICH.COM')
@@ -94,9 +94,9 @@ phys3mo[ , .names] <- .dat
 .dat <- seasAve(UWI.mon)
 phys3mo[ , .names] <- .dat
 
-#   SST
-.names <- paste('SST.', seasonNames, sep='')
-.dat <- seasAve(CWT.mon)  #NOTE: data series name differs
+#   CWT
+.names <- paste('CWT.', seasonNames, sep='')
+.dat <- seasAve(CWT.mon)
 phys3mo[ , .names] <- .dat
 
 #   NPGO
