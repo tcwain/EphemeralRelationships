@@ -1,5 +1,41 @@
 #UpdateNBDCData.R
-# Download NOAA Buoy meteorolgical data from NDBC.
+# Download NOAA Buoy meteorological data from NDBC.
+#
+#  NOTES ON DATA:
+#  * 1991-1999, year was coded as 2 digits rather than 4
+#  * 1991 - 2004, time was as "YY(YY) MM DD hh", while in
+#    2005 - , time was "YYYY MM DD hh mm", thus shifting other columns.
+#  NOTE: above problems ignored here, fixed in "ProcessData.R"
+#  * In 2007, several changes were made:
+#     From: https://www.ndbc.noaa.gov/mods.shtml
+#     1. A "#" sign starts header or other metadata lines (April 10th, 2007).
+# 
+#       This will facilitate having a second header line for units of 
+#       measurement (see below) and other lines interspersed in the data for 
+#       significant changes in metadata, such as a station position change.
+#
+#     2. Column headings were standardized (April 10th, 2007).
+# 
+#       Some columns for the same measurement had different headings, depending 
+#       on which data group they were in. For example, the column heading for 
+#       air pressure was PRES in one list and BARO in another. PRES will be the 
+#       standard for air pressure, APD will be the standard for Average Wave 
+#       Period, WVHT will be the standard for Significant Wave Height, GST will 
+#       be the standard for wind Gust speed.
+#
+#     3. A second header line was added to specify units of measurement 
+#       (April 10th, 2007).
+# 
+#       The 5-day and 45-day realtime data files will be modified to include 
+#       a second header line that specifies the unit of measure for each column. 
+#       Generally, the units in the data files are different than the units on 
+#       the station pages, which has caused misinterpretation. Note! The units 
+#       are not changing - we are just adding information about the units. Raw 
+#       spectral wave data files will not have the second header, as these raw 
+#       data are unitless. See Measurement Descriptions and Units for more 
+#       information on the units of measure used on the NDBC web site.
+# 
+#     NOTE: These 2007 changes don't seem to affect this script. No changes.
 #
 updateNBDCdata <- function(buoyID='46050',
                            startYr=1991, startMon=1,
@@ -7,13 +43,13 @@ updateNBDCdata <- function(buoyID='46050',
   currYr <- as.numeric(format(Sys.time(),'%Y'))
   currMon <- as.numeric(format(Sys.time(),'%m'))
   lastYr <- currYr - 1  #Historical data goes through last calendar year
-  hist.url.path <-'http://www.ndbc.noaa.gov/data/historical/stdmet/'
   lastMon <- currMon - 1  #Recent data goes through end of last month
   if(lastMon==0) {  # Special case for January; historical files not updated
     lastMon <- 12
     lastYr <- lastYr - 1
     currYr <- currYr - 1
-  }
+  } # if(lastMon)
+  hist.url.path <-'http://www.ndbc.noaa.gov/data/historical/stdmet/'
   recent.url.path <-'http://www.ndbc.noaa.gov/data/stdmet/'
   
   if (file.exists(localfile)) {
