@@ -248,21 +248,49 @@ if(!file.exists(.monFile) ||
   SST.46050.ts <- data.frame(DecYr=.decyr, Data=.data)
 
 ##          CWT (Coastal Water Temperature
-##             is already a monthly table, so not much to do:
+##             is already a monthly table, but with many missing values, so
+##             fill missing with calibrated SST.46050 data
       
 cat(' * Processing CWT *\n')
 .dsd <- dataSetDefs$CWT
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
+
+# Fill in missing values from Buoy 46050 SST data ###
+# 1. Calibrate overlapping years (2000-2017)
+# Compute tide station and SST anomalies before regressing series:
+.mns1 <- apply(.raw[ , 2:13], 2, mean, na.rm=T)
+wt.anom <- cbind(Year=.raw[ , 1], sweep(.raw[ , 2:13], 2, .mns1))
+.mns2 <- apply(SST.46050.mon[ , 2:13], 2, mean, na.rm=T)
+SST.anom <- cbind(Year=SST.46050.mon[ , 1], sweep(SST.46050.mon[ , 2:13], 2, .mns2))
+.tmp1 <- as.vector(t(SST.anom[SST.anom$Year %in% 2000:2017, 2:13]))
+.tmp2 <- as.vector(t(wt.anom[wt.anom$Year %in% 2000:2017, 2:13]))
+.reg1 <- lm(.tmp2 ~ .tmp1 - 1)
+cat('Regression of CWT.mon on SST.mon:\n')
+print(summary(.reg1))
+## matplot(SST.anom[SST.anom$Year %in% 2000:2017, 2:13],
+##         wt.anom[wt.anom$Year %in% 2000:2017, 2:13])
+## abline(c(0, .reg1$coef))  #add regression line to plot
+
+# 2. Fill missing values for the same years:
+
+SST.adj <- cbind(SST.anom$Year, SST.anom[,2:13]*.reg1$coef)
+SST.adj[,2:13] <- sweep(SST.adj[,2:13], 2, -.mns1) #add monthly means back in
+wt.fill <- .raw[.raw$Year  %in% 2000:2017, 2:13]
+SST.fill <- SST.adj[SST.adj[,1]  %in% 2000:2017, 2:13]
+wt.fill[is.na(wt.fill)] <- SST.fill[is.na(wt.fill)]
 CWT.mon <- .raw
+CWT.mon[CWT.mon$Year  %in% 2000:2017, 2:13] <- wt.fill
+rownames(CWT.mon) <- CWT.mon$Year
+
 .data <- as.vector(t(CWT.mon[ , -1]))
 .decyr <- min(CWT.mon$Year) + (1:length(.data) - 0.5)/12
 CWT.ts <- data.frame(DecYr=.decyr, Data=.data) 
 
-cat(' * Processing UWI *\n')
 ##          UWI (Upwelling Index)
 ##            is daily data with four columns:  Year, Mon, Day, and 
 ##            UWI, the daily upwelling index.  Compute monthly means:
 
+cat(' * Processing UWI *\n')
 .dsd <- dataSetDefs$UWI
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
 # Get year and month from date column, convert number to text to POSIX date

@@ -54,7 +54,7 @@ ProcessData scripts as needed before finalizing the analysis.
 **Note**: Biological data (salmon population and "stoplight" datasets) and 
 Loggerwell Spring Transition (SpringTrans.csv)  must be updated by hand, and 
 files put in the "Data/HandEdit" folder! Water temperature historical data 
-(SST.46050.\*, WT.OIMB.\*) files should never change, but must be present.
+(WT.OIMB.\*) files should never change, but must be present.
 
 ```{r UpdateData}
 if (UPDATE.DATA) { 

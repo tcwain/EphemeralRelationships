@@ -17,8 +17,6 @@ oimbwt.file <- file.path(hand.dir, 'WT.OIMB.mon.csv')
 oimbwt.daily.file <- file.path(hand.dir, 'WT.OIMB.daily.csv')
 #Local file for final blended Charleston coastal water temperature:
 wt.file <- file.path(dd.dir, 'CWT.tbl')
-#Local file for Stonewall Banks buoy monthly SST (created elsewhere)
-buoy.file <- file.path(hand.dir, 'SST.46050.mon.csv')
 
 ### 1. Download Charleston tide station data ###
 
@@ -131,39 +129,7 @@ tswt.anom <- cbind(Year=tswt.mon[ , 1], sweep(tswt.mon[ , 2:13], 2, .mns))
 cat('\nSummary of monthly flood-tide water temperature means:\n')
 print(tswt.mon)
 
-### 2. Fill in missing values from Buoy 46050 data ###
-
-.cnames <- c("YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD",
-                             "GST", "WVHT", "DPD", "APD", "MWD", "PRES",
-                             "ATMP", "WTMP", "DEWP", "VIS", "TIDE")
-buoy.mon <- read.csv(buoy.file, header=T, colClasses='numeric')
-print(buoy.mon)
-
-# Calibrate overlapping years (2000-2009)
-# Compute tide station and buoy anomalies before regressing series:
-.mns1 <- apply(tswt.mon[ , 2:13], 2, mean, na.rm=T)
-tswt.anom <- cbind(Year=tswt.mon[ , 1], sweep(tswt.mon[ , 2:13], 2, .mns1))
-.mns2 <- apply(buoy.mon[ , 2:13], 2, mean, na.rm=T)
-buoy.anom <- cbind(Year=buoy.mon[ , 1], sweep(buoy.mon[ , 2:13], 2, .mns2))
-.tmp1 <- as.vector(t(buoy.anom[buoy.anom$Year %in% 2000:2009, 2:13]))
-.tmp2 <- as.vector(t(tswt.anom[tswt.anom$Year %in% 2000:2009, 2:13]))
-.reg1 <- lm(.tmp2 ~ .tmp1 - 1)
-print(summary(.reg1))
-##matplot(buoy.anom[buoy.anom$Year %in% 2000:2009, 2:13],
-##        tswt.anom[tswt.anom$Year %in% 2000:2009, 2:13])
-##abline(c(0, .reg1$coef))  #add regression line to plot
-buoy.adj <- cbind(buoy.anom$Year, buoy.anom[,2:13]*.reg1$coef)
-buoy.adj[,2:13] <- sweep(buoy.adj[,2:13], 2, -.mns1) #add monthly means back in
-
-wt.fill <- tswt.mon[tswt.mon$Year %in% 2000:2009, 2:13]
-buoy.fill <- buoy.adj[buoy.adj[,1] %in% 2000:2009, 2:13]
-wt.fill[is.na(wt.fill)] <- buoy.fill[is.na(wt.fill)]
-wt.mon <- tswt.mon
-wt.mon[wt.mon$Year %in% 2000:2009, 2:13] <- wt.fill
-rownames(wt.mon) <- wt.mon$Year
-print(wt.mon)
-
-### 3. Extend back with OIMB pier records ###
+### 2. Extend back with OIMB pier records ###
 # OIMB data is flood tide daily measurements, May 1966 - Aug 1997 (but
 # May 1966 is only a few days, so we discard it).
 
@@ -193,6 +159,8 @@ oimb.mon <- read.csv(oimbwt.file)
 print(oimb.mon)
 
 #compute anomalies for regression:
+.mns1 <- apply(tswt.mon[ , 2:13], 2, mean, na.rm=T)
+tswt.anom <- cbind(Year=tswt.mon[ , 1], sweep(tswt.mon[ , 2:13], 2, .mns1))
 .mns2 <- apply(oimb.mon[ , 2:13], 2, mean, na.rm=T)
 oimb.anom <- cbind(Year=oimb.mon[ , 1], sweep(oimb.mon[ , 2:13], 2, .mns2))
 
