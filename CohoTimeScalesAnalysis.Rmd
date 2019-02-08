@@ -168,14 +168,14 @@ default) to the entire series length. Results are stored in an N x (N-k+1)
 matrix suitable for plotting via ``image``.
 
 ```{r tsapplyFunc}
-tsapply <- compiler::cmpfun(function(dataser, goffnc, minlen=10) {
+tsapply <- compiler::cmpfun(function(dataser, goffnc, minInterval=10) {
   # dataser is a multivariate time series, in the form of a data.frame
   # goffnc is a function that fits a model to a data frame, and returns 
   #   a single numeric goodness-of-fit measure.
-  # minlen is the minumum data subset length
+  # minInterval is the minumum data subset length
   N <- nrow(dataser)
   res <- data.frame(time=NULL, scale=NULL, gof=NULL)
-  for (n in minlen:N) {
+  for (n in minInterval:N) {
     for (j in 1:(N-n+1)) {
       .sub <- j + 0:(n-1)
       if (length(.sub) != n) stop("length(.sub) = ", length(.sub), ", n = ", n)
@@ -193,18 +193,18 @@ truncating the skill measure to be non-negative (negative skill means really
 bad relationship anyway), then multiplying by the sign of the regression slope.
 
 ```{r slopeSkill}
-slpSkill <- function(X, Y) {
+slpSkill <- function(X, Y, minInterval=10) {
   #return LOO skill and regression slope in one data frame
-  loo.res <- tsapply(data.frame(X=X,Y=Y), function(df) {loo.skill(df)$CVS})
+  loo.res <- tsapply(data.frame(X=X, Y=Y), function(df) {loo.skill(df)$CVS}, minInterval=minInterval)
   # get regression slopes for color-coding graph
-  slp.res <- tsapply(data.frame(X=X,Y=Y), function(df) {
+  slp.res <- tsapply(data.frame(X=X, Y=Y), function(df) {
     if (sum(!is.na(df$X+df$Y)) > 4) { # OK
       return(coefficients(lm(Y ~ X, data=df))['X'])
     } else {
       return(NA)
     } # if(sum...)
   } # function(df)
-  ) # tsapply()
+  , minInterval=minInterval) # tsapply()
   loo.res$slp <- slp.res$gof
   return(loo.res)
 } # slpSkill()
@@ -254,7 +254,7 @@ Test skillPlot():
 ```{r tstSkillPlot, fig.height=6, fig.width=6}
 X <- rnorm(20)
 Y <- X + rnorm(20)
-tst <- slpSkill(X, Y)
+tst <- slpSkill(X, Y, minInterval=10)
 skillPlot(tst, title='Test', add.contours = TRUE)
 rm(X, Y, tst)
 ```
@@ -282,7 +282,7 @@ if (!exists("ss.out")) {
                        # log(OPIH Recruits/Smolt)
                        #   NOTE: Recr in thousands, smolts in millions
                        x <- log(0.001 * analdata$OPIH.RC / analdata$OPIH.SM)
-                       slpSkill(X=x, Y=predictors[ , k])
+                       slpSkill(X=x, Y=predictors[ , k], minInterval=5)
                      }
                      , mc.cores=mc)
   rm(mc, preds)
@@ -301,7 +301,7 @@ for (series in names(ss.out)) {
   ss$time <- analdata$YEAR[ss$time]
   cat('\t Range of Skill: ', round(range(ss$gof, na.rm=TRUE),2), '\n')
 ##  if (max(ss$gof, na.rm=TRUE) > skillthresh) { 
-    skillPlot(ss, title=series, dot.scale=1.0, xlim=c(1975,2015), ylim=c(10,50),
+    skillPlot(ss, title=series, dot.scale=1.0, xlim=c(1975,2015), ylim=c(5,50),
               add.contours = TRUE) 
 ##  } # if
 } # for(series)
@@ -312,3 +312,101 @@ rm(skillthresh, op)
 ## Selected Results for Manuscript
 
 **TODO**: add function for dot-plots as in SurvivalAnalysis/SalmonClimatePred1.R.
+```{r tsDotPlot}
+tsDotPlot <- function(ssList, selScale, dataYears, gofLabel='LOO Skill', ...) {
+  # A time-series dot-plot of signed forecast skill at one particular time scale.
+  # ssList: a named list of skill sets, with names interpreted as predictor names,
+  #         each element a data frame with columns 'time', 'scale', 'gof', and
+  #         'slope'
+  # selScale: the selected scale for this plot (must occur in the ssList data)
+  
+  # summarize data ranges for plot limits:
+  times <- sort(unique(as.vector(sapply(ssList, function(X) {X$time}))))
+  scales <- sort(unique(as.vector(sapply(ssList, function(X) {X$scale}))))
+  pred.names <- names(ssList)
+  n.pred <- length(pred.names)
+  # get corresponding year values for plot labels:
+  years <- analdata$YEAR[times]
+
+  # Plot layout:
+  layout(matrix(c(1,2),ncol=1), widths=c(1), heights=c(0.2,0.8))
+
+  # Legend at top (first plot frame):
+  par(mar=c(4,10,1,2)+0.1)
+  plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="")
+  symbols(x=(0:20)/20, y=rep(1,21), circles=c(0.1,1:20)/20,
+          bg="grey", inches=0.1, add=T, cex.axis=1.25)
+  axis(1)
+
+  # main plot frame:
+  par(mar=c(4,10,1,2)+0.1)
+  plot(c(min(years), max(years)), c(1, n.pred), type="n", axes=F,
+       xlab=paste("End-Year of Interval", sep=""), ylab="", cex.lab=1.5)
+  box()
+  axis(side=1)
+  mtext(paste('(', selScale, '-year intervals)'), side=1, line=3.5, cex=1.0)
+  axis(side=2, at=1:n.pred, labels=pred.names, las=2, cex.axis=1.25)
+  yy <- 0
+  for (p in pred.names) {
+    print(p)
+    yy <- yy + 1
+    print(yy)
+    ss <- ssList[[p]]
+    ss <- ss[ss$scale==selScale, ]
+    ss$gof <- pmax(0,ss$gof) # get rid of negative values (very bad fit)
+    print(summary(ss))
+    if (any(!is.na(ss$gof))) {
+      symbols(x=dataYears[ss$time], y=rep(yy, length(ss$time)),
+              circles=0.5*ss$gof,
+              inches=0.1*max(ss$gof, na.rm=T), add=T,
+              fg=ifelse(ss$slp < 0, 'red', 'blue'),
+              bg=ifelse(ss$slp < 0, 'red', 'blue'))
+    } # if(any(!is.na(...)))
+  } # for(p)
+  
+  # j <- 1  #indexes predictor
+  # for (x in colnames(predictors)) {
+  #   i <- 1  #indexes year (1 == start of ana.yrs)
+  #   for (end.yr in ana.yrs) {
+  #     s1 <- surv[match((end.yr-pint+1):end.yr, years), y]
+  #     p1 <- predictors[match((end.yr-pint+1):end.yr, years), x]
+  #     if (sum(!is.na(s1)&!is.na(p1)) > ceiling(pint/2)) { #half the data available
+  #       gfit <- lm(s1 ~ p1)
+  #       gsum <- summary(gfit)
+  #       res.rsq[i, x] <- max(0, gsum$adj.r.squared)
+  #       res.slp[i, x] <- coef(gfit)["p1"]
+  #       # Compute 1-step ahead prediction:
+  #       p1.next <- predictors[match(end.yr+1, years), x]
+  #       if (!is.na(p1.next)) {
+  #         tmp <- predict(gfit, newdata=data.frame(p1=p1.next), se=T)
+  #         pred.fit[i, x] <- tmp$fit
+  #         pred.se[i, x] <- tmp$se.fit
+  #         pred.err[i, x] <- tmp$fit - s1[length(s1)]  #predicted - observed
+  #       } #if !is.na(predictors...
+  #     } #if sum(!is.na(s1...
+  #     i <- i + 1
+  #   }  #for end.yr
+  #   if (any(!is.na(res.rsq[ , x]))) {
+  #     symbols(x=ana.yrs, y=rep(n.pred+1-j, length(ana.yrs)),
+  #             circles=0.5*res.rsq[ ,x],
+  #             inches=0.1*max(res.rsq[ ,x], na.rm=T), add=T,
+  #             bg=ifelse(res.slp[ ,x]<0,"red","blue"))
+  #   }
+  #   if(sum(!is.na(pred.err[,j])) > 2) {
+  #     mn.skill[j] <- 1 - mean(pred.err[ , j]^2, na.rm=T) /
+  #       var(surv[match(ana.yrs[!is.na(pred.err[,j])], years), y])
+  #   }  #if
+  #   j <- j+1
+  # }  #for x
+  # mtext(y, side=3, outer=T, line=2)
+} # tsDotPlot()
+```
+
+Do plot:
+
+```{r dotPlots, fig.height=6, fig.width=9}
+ss.sel <- ss.out[1:10]
+tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR)
+```
+
+FINIS
