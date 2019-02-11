@@ -311,18 +311,19 @@ rm(skillthresh, op)
 
 ## Selected Results for Manuscript
 
-**TODO**: add function for dot-plots as in SurvivalAnalysis/SalmonClimatePred1.R.
+First, a function for dot-plots of multiple predictors at a single time scale.
+
 ```{r tsDotPlot}
-tsDotPlot <- function(ssList, selScale, dataYears, gofLabel='LOO Skill', ...) {
+tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...) {
   # A time-series dot-plot of signed forecast skill at one particular time scale.
   # ssList: a named list of skill sets, with names interpreted as predictor names,
   #         each element a data frame with columns 'time', 'scale', 'gof', and
   #         'slope'
-  # selScale: the selected scale for this plot (must occur in the ssList data)
+  # selScale: the selected scale for this plot (must occur in the ssList data).
+  #         If 'NA', then plot skill using full data up to each time point.
   
   # summarize data ranges for plot limits:
   times <- sort(unique(as.vector(sapply(ssList, function(X) {X$time}))))
-  scales <- sort(unique(as.vector(sapply(ssList, function(X) {X$scale}))))
   pred.names <- names(ssList)
   n.pred <- length(pred.names)
   # get corresponding year values for plot labels:
@@ -333,80 +334,75 @@ tsDotPlot <- function(ssList, selScale, dataYears, gofLabel='LOO Skill', ...) {
 
   # Legend at top (first plot frame):
   par(mar=c(4,10,1,2)+0.1)
-  plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="")
-  symbols(x=(0:20)/20, y=rep(1,21), circles=c(0.1,1:20)/20,
+  plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="", 
+       cex.lab=1.5, mgp=c(2.5,1,0))
+  symbols(x=(0:20)/20, y=rep(1,21), circles=sqrt(c(0.1,1:20)/20),
           bg="grey", inches=0.1, add=T, cex.axis=1.25)
   axis(1)
 
   # main plot frame:
-  par(mar=c(4,10,1,2)+0.1)
+  par(mar=c(6,10,1,2)+0.1)
   plot(c(min(years), max(years)), c(1, n.pred), type="n", axes=F,
-       xlab=paste("End-Year of Interval", sep=""), ylab="", cex.lab=1.5)
+       xlab="End-Year of Interval", ylab="", cex.lab=1.5)
   box()
   axis(side=1)
-  mtext(paste('(', selScale, '-year intervals)'), side=1, line=3.5, cex=1.0)
+  if (!is.na(selScale)) {
+    mtext(paste0('(', selScale, '-year intervals)'), side=1, line=4, cex=1.0)
+  } # if(!is.na(selScale))
   axis(side=2, at=1:n.pred, labels=pred.names, las=2, cex.axis=1.25)
   yy <- 0
   for (p in pred.names) {
-    print(p)
     yy <- yy + 1
-    print(yy)
     ss <- ssList[[p]]
-    ss <- ss[ss$scale==selScale, ]
+    ss <- ss[!is.na(ss$gof), ] # select times and scales with data
+    if (is.na(selScale)) {
+      # use all data up to year (the first dot in each row of the plots above)
+      xx <- data.frame(time=numeric(0), scale=numeric(0), gof=numeric(0), slp=numeric(0))
+      for (s in unique(ss$scale)) {
+        subss <- ss[ss$scale==s, ]
+        xx <- rbind(xx, subss[subss$time==min(subss$time), ])
+      } # for(s)
+      ss <- xx
+    } else {
+      ss <- ss[ss$scale==selScale, ]
+    } # if(is.na(selScale))
     ss$gof <- pmax(0,ss$gof) # get rid of negative values (very bad fit)
-    print(summary(ss))
     if (any(!is.na(ss$gof))) {
       symbols(x=dataYears[ss$time], y=rep(yy, length(ss$time)),
-              circles=0.5*ss$gof,
-              inches=0.1*max(ss$gof, na.rm=T), add=T,
+              circles=sqrt(ss$gof),
+              inches=0.1*max(sqrt(ss$gof), na.rm=T), add=T,
               fg=ifelse(ss$slp < 0, 'red', 'blue'),
               bg=ifelse(ss$slp < 0, 'red', 'blue'))
     } # if(any(!is.na(...)))
   } # for(p)
-  
-  # j <- 1  #indexes predictor
-  # for (x in colnames(predictors)) {
-  #   i <- 1  #indexes year (1 == start of ana.yrs)
-  #   for (end.yr in ana.yrs) {
-  #     s1 <- surv[match((end.yr-pint+1):end.yr, years), y]
-  #     p1 <- predictors[match((end.yr-pint+1):end.yr, years), x]
-  #     if (sum(!is.na(s1)&!is.na(p1)) > ceiling(pint/2)) { #half the data available
-  #       gfit <- lm(s1 ~ p1)
-  #       gsum <- summary(gfit)
-  #       res.rsq[i, x] <- max(0, gsum$adj.r.squared)
-  #       res.slp[i, x] <- coef(gfit)["p1"]
-  #       # Compute 1-step ahead prediction:
-  #       p1.next <- predictors[match(end.yr+1, years), x]
-  #       if (!is.na(p1.next)) {
-  #         tmp <- predict(gfit, newdata=data.frame(p1=p1.next), se=T)
-  #         pred.fit[i, x] <- tmp$fit
-  #         pred.se[i, x] <- tmp$se.fit
-  #         pred.err[i, x] <- tmp$fit - s1[length(s1)]  #predicted - observed
-  #       } #if !is.na(predictors...
-  #     } #if sum(!is.na(s1...
-  #     i <- i + 1
-  #   }  #for end.yr
-  #   if (any(!is.na(res.rsq[ , x]))) {
-  #     symbols(x=ana.yrs, y=rep(n.pred+1-j, length(ana.yrs)),
-  #             circles=0.5*res.rsq[ ,x],
-  #             inches=0.1*max(res.rsq[ ,x], na.rm=T), add=T,
-  #             bg=ifelse(res.slp[ ,x]<0,"red","blue"))
-  #   }
-  #   if(sum(!is.na(pred.err[,j])) > 2) {
-  #     mn.skill[j] <- 1 - mean(pred.err[ , j]^2, na.rm=T) /
-  #       var(surv[match(ana.yrs[!is.na(pred.err[,j])], years), y])
-  #   }  #if
-  #   j <- j+1
-  # }  #for x
-  # mtext(y, side=3, outer=T, line=2)
 } # tsDotPlot()
 ```
 
-Do plot:
+Plot at 10 & 20 year intervals for selected predictors:
+Criteria: had reasonable skill at some times and scales (say max skill > 0.25).
 
-```{r dotPlots, fig.height=6, fig.width=9}
-ss.sel <- ss.out[1:10]
+- PDO: AMJ, JAS, OND
+- ONI: AMJ, JAS, OND
+- UWI: AMJ, JAS, OND
+- CWT: AMJ
+- NPG: JFM, AMJ, JAS, OND
+- SPT.LGR
+- COP.SAN
+- TMP.DP
+- ICH.BIO
+- ICH.COM
+
+```{r dotPlots, fig.height=9, fig.width=9}
+selpred <- c("PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.AMJ", "ONI.JAS", "ONI.OND",
+                "UWI.AMJ", "UWI.JAS", "UWI.OND", "CWT.AMJ", "NPG.JFM", "NPG.AMJ",
+                "NPG.JAS", "NPG.OND", "SPT.LGR", "COP.SAN", "TMP.DP", "ICH.BIO",
+                "ICH.COM")
+ss.sel <- ss.out
+# Ten-Year Intervals
 tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR)
+# Twenty-Year Intervals
+tsDotPlot(ss.sel, selScale=15, dataYears=analdata$YEAR)
+# All Data (Variable Intervals)
+tsDotPlot(ss.sel, selScale=NA, dataYears=analdata$YEAR)
 ```
 
-FINIS
