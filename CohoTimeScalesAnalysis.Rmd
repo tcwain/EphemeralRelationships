@@ -113,16 +113,8 @@ earlier, and OPIH smolt local peaks in 2007-08 and 2000 are correct.
 
 ###Select predictors
 
-Change sign of NPGO, NPI & UWI so they correlate positively with other 
-varialbles.
-
 ```{r SelectPredictors}
 predictors <- analdata[ , -(1:5)]  # Whole data set except Year and coho data
-## reverse sign on some predictors to have consistent +/- regr. slopes
-predictors[ , grep('NPG.', colnames(predictors))] <- 
-  - predictors[ , grep('NPG.', colnames(predictors))]
-predictors[ , grep('UWI.', colnames(predictors))] <- 
-  - predictors[ , grep('UWI.', colnames(predictors))]
 plot.names <- colnames(predictors)   # FUTURE: Pretty names
 ## Testing - subset of predictors 
 ## predictors <- predictors[ , 1:12]
@@ -353,6 +345,8 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
   axis(side=1)
   if (!is.na(selScale)) {
     mtext(paste0('(', selScale, '-year intervals)'), side=1, line=4, cex=1.0)
+  } else {
+    mtext("(All prior data)", side=1, line=4, cex=1.0)
   } # if(!is.na(selScale))
   axis(side=2, at=1:n.pred, labels=pred.names, las=2, cex.axis=1.25)
   yy <- 0
