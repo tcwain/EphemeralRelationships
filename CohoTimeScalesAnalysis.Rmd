@@ -22,8 +22,8 @@ knitr::opts_chunk$set(echo = TRUE, fig.height=4, fig.width=6, warning=TRUE)
 syntax for authoring HTML, PDF, and MS Word documents. For more details on 
 using R Markdown see <http://rmarkdown.rstudio.com>.
 
-Besides R base and recommended packages, this document requires R packages 
-`akima` and `RColorBrewer`.
+Besides R base and recommended packages, this document optionally uses R package 
+`akima` for contouring in plots.
 
 ## Introduction
 
@@ -218,6 +218,7 @@ dotted), 0.5 (dashed) and 0.75 (solid).
 ```{r skillPlot}
 skillPlot <- function(ss, title="", dot.scale=0.5, add.contours=FALSE, ...) {
   # Plot signed skill on scale v time axis
+  # NOTE: add.contours requires R package 'akima'
   ss <- ss[!is.na(ss$gof), ]      # remove na's for interp()
   ss$gof <- pmax(0,ss$gof) # get rid of negative values (very bad fit)
   plot(ss$time, ss$scale, type='n', asp=1.0, xaxs='r', 
@@ -240,11 +241,15 @@ skillPlot <- function(ss, title="", dot.scale=0.5, add.contours=FALSE, ...) {
             circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey80',
             bg=ifelse(ss$slp<0,"#D34364","#4364D3"), add=T)
   if (add.contours) {
-    zz <- with(ss, akima::interp(time, scale, gof, xo=sort(unique(time)), 
-                                 yo=sort(unique(scale))))
-    contour(zz, levels=c(0.5, 0.75), 
-          lty=c(1, 1), lwd=c(1, 2), col='black', 
-          drawlabels=FALSE, add=TRUE)
+    if (requireNamespace('akima')) {
+      zz <- with(ss, akima::interp(time, scale, gof, xo=sort(unique(time)), 
+                                   yo=sort(unique(scale))))
+      contour(zz, levels=c(0.5, 0.75), 
+              lty=c(1, 1), lwd=c(1, 2), col='black', 
+              drawlabels=FALSE, add=TRUE)
+    } else {
+      warning('In skillPlot(): Contouring requires package "akima".')
+    } # if(requireNamespace())
   } # if(add.contours)
 } # skillPlot()
 ```
