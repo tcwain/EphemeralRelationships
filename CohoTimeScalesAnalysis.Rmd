@@ -308,7 +308,20 @@ rm(skillthresh, op)
 
 ## Selected Results for Manuscript
 
-First, a function for dot-plots of multiple predictors at a single time scale.
+### Plot of OPIH coho "marine survival" (adult recruits per smolt released):
+
+```{r OPIHPlot, fig.height=6, fig.width=9}
+# NOTE: Recruits are in 1000's, smolts in millions.
+with(analdata, {
+  plot(YEAR, 0.1 * OPIH.RC / OPIH.SM, log='y', type='b', pch=19, lwd=3,
+       xlab="Year of Ocean Entry", ylab="Marine Survival (%)")
+  }
+)
+```
+
+### Multiple predictor skill timeseries dot plots:
+
+A function for dot-plots of multiple predictors at a single time scale.
 
 ```{r tsDotPlot}
 tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...) {
@@ -321,7 +334,7 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
   
   # summarize data ranges for plot limits:
   times <- sort(unique(as.vector(sapply(ssList, function(X) {X$time}))))
-  pred.names <- names(ssList)
+  pred.names <- rev(names(ssList))  # reverse names so plot from top to bottom
   n.pred <- length(pred.names)
   # get corresponding year values for plot labels:
   years <- analdata$YEAR[times]
@@ -330,15 +343,16 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
   layout(matrix(c(1,2),ncol=1), widths=c(1), heights=c(0.2,0.8))
 
   # Legend at top (first plot frame):
-  par(mar=c(4,10,1,2)+0.1)
+  op <- par(mar=c(4,10,1,2)+0.1)
   plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="", 
        cex.lab=1.5, mgp=c(2.5,1,0))
   symbols(x=(0:20)/20, y=rep(1,21), circles=sqrt(c(0.1,1:20)/20),
           bg="grey", inches=0.1, add=T, cex.axis=1.25)
   axis(1)
-
+  par(op)
+  
   # main plot frame:
-  par(mar=c(6,10,1,2)+0.1)
+  op <- par(mar=c(6,10,1,2)+0.1)
   plot(c(min(years), max(years)), c(1, n.pred), type="n", axes=F,
        xlab="End-Year of Interval", ylab="", cex.lab=1.5)
   box()
@@ -356,7 +370,8 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
     ss <- ss[!is.na(ss$gof), ] # select times and scales with data
     if (is.na(selScale)) {
       # use all data up to year (the first dot in each row of the plots above)
-      xx <- data.frame(time=numeric(0), scale=numeric(0), gof=numeric(0), slp=numeric(0))
+      xx <- data.frame(time=numeric(0), scale=numeric(0), 
+                       gof=numeric(0), slp=numeric(0))
       for (s in unique(ss$scale)) {
         subss <- ss[ss$scale==s, ]
         xx <- rbind(xx, subss[subss$time==min(subss$time), ])
@@ -374,29 +389,49 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
               bg=ifelse(ss$slp < 0, 'red', 'blue'))
     } # if(any(!is.na(...)))
   } # for(p)
+  par(op)
 } # tsDotPlot()
 ```
 
 Plot at 10 & 20 year intervals for selected predictors:
-Criteria: had reasonable skill at some times and scales (say max skill > 0.25).
+Criteria: had some reasonable longterm skill at some time point (max skill >= 0.1).
 
-- PDO: AMJ, JAS, OND
-- ONI: AMJ, JAS, OND
-- UWI: AMJ, JAS, OND
-- CWT: AMJ
-- NPG: JFM, AMJ, JAS, OND
+```{r ltSkillSummary}
+  for (p in names(ss.out)) {
+    ss <- ss.out[[p]]
+    ss <- ss[!is.na(ss$gof), ] # select times and scales with data
+      # use all data up to year (the first dot in each row of the plots above)
+      xx <- data.frame(time=numeric(0), scale=numeric(0), gof=numeric(0), slp=numeric(0))
+      for (s in unique(ss$scale)) {
+        subss <- ss[ss$scale==s, ]
+        xx <- rbind(xx, subss[subss$time==min(subss$time), ])
+      } # for(s)
+    cat(p, ': range(skill) = ', round(range(xx$gof, na.rm=TRUE), 1), '\n')
+  } # for(p)
+```
+
+The resulting list of those with long-term skill <= 0.1:
+
+- PDO.(JFM,AMJ,JAS,OND)
+- ONI.OND
+- UWI.(JAS,OND)
+- CWT.(JFM,JAS,OND)
+- NPG.(AMJ,JAS,OND)
 - SPT.LGR
+- SPT.BIO
+- COP.RCH
+- COP.NAN
 - COP.SAN
 - TMP.DP
 - ICH.BIO
-- ICH.COM
+
 
 ```{r dotPlots, fig.height=9, fig.width=9}
-selpred <- c("PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.AMJ", "ONI.JAS", "ONI.OND",
-                "UWI.AMJ", "UWI.JAS", "UWI.OND", "CWT.AMJ", "NPG.JFM", "NPG.AMJ",
-                "NPG.JAS", "NPG.OND", "SPT.LGR", "COP.SAN", "TMP.DP", "ICH.BIO",
-                "ICH.COM")
-ss.sel <- ss.out
+selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.OND",
+             "UWI.JAS", "UWI.OND", "CWT.JFM", "CWT.JAS", "CWT.OND", 
+             "NPG.AMJ", "NPG.JAS", "NPG.OND", "SPT.LGR", "SPT.BIO", 
+             "COP.RCH", "COP.NAN", "COP.SAN", "TMP.DP", "ICH.BIO")
+ss.sel <- ss.out[selpred]
 # Ten-Year Intervals
 tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR)
 # Twenty-Year Intervals
