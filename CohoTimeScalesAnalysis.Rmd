@@ -30,17 +30,26 @@ Besides R base and recommended packages, this document optionally uses R package
 This document details the analyses in Wainwright (2019, [ADD TITLE], Progr. 
 Oceanogr. XX:XXX-XXX).
 
+## Script Configuration
+
+Set a couple flags for a couple options:
+
+* UPDATE.DATA: Set to true to update data sets from the web (and reload 
+hand-edited data). This is a time-consuming process, subject to lots of web
+errors, and only needs to be done if the file "AnalysisData.csv" is out of date.
+
+* BLACKWHITE: Set to generate grey-scale figures for publication.
+
+```{r ScriptConfig}
+UPDATE.DATA <- FALSE
+BLACKWHITE <- TRUE
+```
+
 ## Data
 
 ### Update the data set
 
-Update the environmental data sets, if desired (set the following flag to 
-``TRUE``).
-
-```{r UpdateFlag}
-UPDATE.DATA <- FALSE
-```
-This only needs to be done if the file "AnalysisData.csv" is out-of-date.
+Update the environmental data sets, only if UPDATE.DATA is TRUE.
 
 Monthly environmental series are restructured to 4 seasons (Win [JFM], 
 Spr [AMJ], Sum [JAS], and Aut [OND]). Annual environmental series are left as 
@@ -208,7 +217,9 @@ circle size indicates skill. Contours are added at skill levels 0.25 (thin
 dotted), 0.5 (dashed) and 0.75 (solid).
 
 ```{r skillPlot}
-skillPlot <- function(ss, title="", dot.scale=0.5, add.contours=FALSE, ...) {
+skillPlot <- function(ss, title="", dot.scale=1, 
+                      dot.fill=c(neg="red", pos="blue"), 
+                      add.contours=FALSE, ...) {
   # Plot signed skill on scale v time axis
   # NOTE: add.contours requires R package 'akima'
   ss <- ss[!is.na(ss$gof), ]      # remove na's for interp()
@@ -229,9 +240,9 @@ skillPlot <- function(ss, title="", dot.scale=0.5, add.contours=FALSE, ...) {
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.15*yrange,
        paste0("Maximum Skill: ", round(max(ss$gof),2)), 
        cex=1, adj=c(0,1), col='black')
-  symbols(ss$time, ss$scale,
-            circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey80',
-            bg=ifelse(ss$slp<0,"#D34364","#4364D3"), add=T)
+    symbols(ss$time, ss$scale,
+            circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey20',
+            bg=ifelse(ss$slp<0,dot.fill["neg"],dot.fill["pos"]), add=T)
   if (add.contours) {
     if (requireNamespace('akima')) {
       zz <- with(ss, akima::interp(time, scale, gof, xo=sort(unique(time)), 
@@ -252,7 +263,7 @@ Test skillPlot():
 X <- rnorm(20)
 Y <- X + rnorm(20)
 tst <- slpSkill(X, Y, minInterval=10)
-skillPlot(tst, title='Test', add.contours = TRUE)
+skillPlot(tst, title='Test', dot.scale=0.5, add.contours = TRUE)
 rm(X, Y, tst)
 ```
 
@@ -291,6 +302,11 @@ a threshold. The X-axis is the year of ocean entry (return year - 1).
 
 ```{r Results, fig.height=6, fig.width=6}
 skillthresh <- 0.00
+if (BLACKWHITE) {
+  fill.col <- c(neg=NULL, pos="grey50")      ## Grey-scale Figs
+} else {
+  fill.col <- c(neg="#D34364",pos="#4364D3") ## Color Figs
+} # if(BLACKWHITE)
 op <- par(mfrow=c(2,2), mar=c(3,3,1,1), mgp=c(1.5,0.25,0), fg='grey', tck=1)
 for (series in names(ss.out)) {
   cat('Predictor: ', series, '\n')
@@ -298,8 +314,8 @@ for (series in names(ss.out)) {
   ss$time <- analdata$YEAR[ss$time]
   cat('\t Range of Skill: ', round(range(ss$gof, na.rm=TRUE),2), '\n')
 ##  if (max(ss$gof, na.rm=TRUE) > skillthresh) { 
-    skillPlot(ss, title=series, dot.scale=1.0, xlim=c(1975,2015), ylim=c(5,50),
-              add.contours = TRUE) 
+    skillPlot(ss, title=series, dot.scale=1.0, dot.fill=fill.col,
+              add.contours = FALSE, xlim=c(1975,2015), ylim=c(5,50)) 
 ##  } # if
 } # for(series)
 par(op)
@@ -324,7 +340,8 @@ with(analdata, {
 A function for dot-plots of multiple predictors at a single time scale.
 
 ```{r tsDotPlot}
-tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...) {
+tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill', 
+                      dot.fill=c(neg="red", pos="blue"), ...) {
   # A time-series dot-plot of signed forecast skill at one particular time scale.
   # ssList: a named list of skill sets, with names interpreted as predictor names,
   #         each element a data frame with columns 'time', 'scale', 'gof', and
@@ -347,7 +364,7 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
   plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="", 
        cex.lab=1.5, mgp=c(2.5,1,0))
   symbols(x=(0:20)/20, y=rep(1,21), circles=sqrt(c(0.1,1:20)/20),
-          bg="grey", inches=0.1, add=T, cex.axis=1.25)
+          bg="grey", fg="grey20", inches=0.1, add=T, cex.axis=1.25)
   axis(1)
   par(op)
   
@@ -385,8 +402,8 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='LOO Skill', ...)
       symbols(x=dataYears[ss$time], y=rep(yy, length(ss$time)),
               circles=sqrt(ss$gof),
               inches=0.1*max(sqrt(ss$gof), na.rm=T), add=T,
-              fg=ifelse(ss$slp < 0, 'red', 'blue'),
-              bg=ifelse(ss$slp < 0, 'red', 'blue'))
+              fg="grey20",
+              bg=ifelse(ss$slp < 0, dot.fill["neg"], dot.fill["pos"]))
     } # if(any(!is.na(...)))
   } # for(p)
   par(op)
@@ -432,11 +449,17 @@ selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.OND",
              "NPG.AMJ", "NPG.JAS", "NPG.OND", "SPT.LGR", "SPT.BIO", 
              "COP.RCH", "COP.NAN", "COP.SAN", "TMP.DP", "ICH.BIO")
 ss.sel <- ss.out[selpred]
+if (BLACKWHITE) {
+  fill.col <- c(neg=NULL, pos="grey50")      ## Grey-scale Figs
+} else {
+  fill.col <- c(neg="#D34364",pos="#4364D3") ## Color Figs
+} # if(BLACKWHITE)
+
 # Ten-Year Intervals
-tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR)
+tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR, dot.fill=fill.col)
 # Twenty-Year Intervals
-tsDotPlot(ss.sel, selScale=15, dataYears=analdata$YEAR)
+tsDotPlot(ss.sel, selScale=15, dataYears=analdata$YEAR, dot.fill=fill.col)
 # All Data (Variable Intervals)
-tsDotPlot(ss.sel, selScale=NA, dataYears=analdata$YEAR)
+tsDotPlot(ss.sel, selScale=NA, dataYears=analdata$YEAR, dot.fill=fill.col)
 ```
 
