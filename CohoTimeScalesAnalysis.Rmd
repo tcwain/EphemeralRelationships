@@ -95,7 +95,7 @@ if (UPDATE.DATA) {
 Read in the full data set, and do a plot so we can double check the alignment 
 of salmon data against published data sets.
 
-```{r ReadData, fig.height=6, fig.width=9}
+```{r ReadData, dev=c('postscript'), fig.height=5, fig.width=7.4}
 # Environmental data:
 analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
