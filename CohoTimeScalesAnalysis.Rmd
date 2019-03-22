@@ -14,7 +14,8 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.height=4, fig.width=6, warning=TRUE)
+knitr::opts_chunk$set(echo = TRUE, dev=c('png','postscript'), 
+                      fig.height=5, fig.width=7.4, warning=TRUE)
 ## load(".RData") #not done automatically in interactive knitr session.
 ```
 
@@ -95,7 +96,7 @@ if (UPDATE.DATA) {
 Read in the full data set, and do a plot so we can double check the alignment 
 of salmon data against published data sets.
 
-```{r ReadData, dev=c('postscript'), fig.height=5, fig.width=7.4}
+```{r ReadData}
 # Environmental data:
 analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
@@ -111,7 +112,7 @@ with(analdata, {
   lines(YEAR, scale(OPIH.SM), col=2, lty=2)
   })
 legend('bottom', c('OCN.RCR','OCN.SPN','PDO.AMJ','OPIH.RC','OPIH.SM'), 
-       col=c(1,2,3,1,2), lty=c(1,1,1,2,2), horiz=TRUE)
+       col=c(1,2,3,1,2), lty=c(1,1,1,2,2), horiz=TRUE, cex=0.75)
 ```
 
 Yes, the data line up properly. The 2011 and 2014 peaks in OCN recruits and 
@@ -229,17 +230,14 @@ skillPlot <- function(ss, title="", dot.scale=1,
   pl.lims <- par('usr') # get X & Y plot limits (Xmin,Xmax,Ymin,Ymax)
   xrange <- pl.lims[2] - pl.lims[1]
   yrange <- pl.lims[4] - pl.lims[3]
-#  text(min(ss$time), max(ss$scale), title, cex=1.25, adj=c(0, 1), col='black')
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.05*yrange, title, 
-       cex=1.2, adj=c(0, 1), col='black')
-#  text(min(ss$time), max(ss$scale) - 0.1 * diff(range(ss$scale)),
+       adj=c(0, 1), col='black', ...)
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.1*yrange,
        paste0("Long-term Skill: ", round(ss$gof[ss$scale==max(ss$scale)],2)), 
-       cex=1, adj=c(0,1), col='black')
-#  text(min(ss$time), max(ss$scale) - 0.17 * diff(range(ss$scale)),
+       adj=c(0,1), col='black', ...)
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.15*yrange,
        paste0("Maximum Skill: ", round(max(ss$gof),2)), 
-       cex=1, adj=c(0,1), col='black')
+       adj=c(0,1), col='black', ...)
     symbols(ss$time, ss$scale,
             circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey20',
             bg=ifelse(ss$slp<0,dot.fill["neg"],dot.fill["pos"]), add=T)
@@ -259,11 +257,11 @@ skillPlot <- function(ss, title="", dot.scale=1,
 
 Test skillPlot():
 
-```{r tstSkillPlot, fig.height=6, fig.width=6}
+```{r tstSkillPlot, fig.height=3.5, fig.width=3.5}
 X <- rnorm(20)
 Y <- X + rnorm(20)
 tst <- slpSkill(X, Y, minInterval=10)
-skillPlot(tst, title='Test', dot.scale=0.5, add.contours = TRUE)
+skillPlot(tst, title='Test', dot.scale=0.5, add.contours = TRUE, cex=0.5)
 rm(X, Y, tst)
 ```
 
@@ -300,7 +298,7 @@ if (!exists("ss.out")) {
 Summarize results and plot. Plots are done only for those with skill above 
 a threshold. The X-axis is the year of ocean entry (return year - 1).
 
-```{r Results, fig.height=6, fig.width=6}
+```{r Results, fig.height=5.5, fig.width=5.5}
 skillthresh <- 0.00
 if (BLACKWHITE) {
   fill.col <- c(neg=NULL, pos="grey50")      ## Grey-scale Figs
@@ -314,7 +312,7 @@ for (series in names(ss.out)) {
   ss$time <- analdata$YEAR[ss$time]
   cat('\t Range of Skill: ', round(range(ss$gof, na.rm=TRUE),2), '\n')
 ##  if (max(ss$gof, na.rm=TRUE) > skillthresh) { 
-    skillPlot(ss, title=series, dot.scale=1.0, dot.fill=fill.col,
+    skillPlot(ss, title=series, dot.scale=1.0, dot.fill=fill.col, cex=0.75,
               add.contours = FALSE, xlim=c(1975,2015), ylim=c(5,50)) 
 ##  } # if
 } # for(series)
@@ -326,8 +324,9 @@ rm(skillthresh, op)
 
 ### Plot of OPIH coho "marine survival" (adult recruits per smolt released):
 
-```{r OPIHPlot, fig.height=6, fig.width=9}
+```{r OPIHPlot, fig.height=3.7, fig.width=5.5}
 # NOTE: Recruits are in 1000's, smolts in millions.
+par(mar=c(4,4,1,1)+0.1)
 with(analdata, {
   plot(YEAR, 0.1 * OPIH.RC / OPIH.SM, log='y', type='b', pch=19, lwd=3,
        xlab="Year of Ocean Entry", ylab="Marine Survival (%)")
@@ -362,24 +361,24 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill',
   # Legend at top (first plot frame):
   op <- par(mar=c(4,10,1,2)+0.1)
   plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="", 
-       cex.lab=1.5, mgp=c(2.5,1,0))
+       mgp=c(2.5,1,0), ...)
   symbols(x=(0:20)/20, y=rep(1,21), circles=sqrt(c(0.1,1:20)/20),
-          bg="grey", fg="grey20", inches=0.1, add=T, cex.axis=1.25)
+          bg="grey", fg="grey20", inches=0.1, add=T)
   axis(1)
   par(op)
   
   # main plot frame:
-  op <- par(mar=c(6,10,1,2)+0.1)
+  op <- par(mar=c(6,10,2,2)+0.1, xpd=NA)
   plot(c(min(years), max(years)), c(1, n.pred), type="n", axes=F,
-       xlab="End-Year of Interval", ylab="", cex.lab=1.5)
+       xlab="End-Year of Interval", ylab="", ...)
   box()
   axis(side=1)
   if (!is.na(selScale)) {
-    mtext(paste0('(', selScale, '-year intervals)'), side=1, line=4, cex=1.0)
+    mtext(paste0('(', selScale, '-year intervals)'), side=1, line=4, ...)
   } else {
-    mtext("(All prior data)", side=1, line=4, cex=1.0)
+    mtext("(All prior data)", side=1, line=4, ...)
   } # if(!is.na(selScale))
-  axis(side=2, at=1:n.pred, labels=pred.names, las=2, cex.axis=1.25)
+  axis(side=2, at=1:n.pred, labels=pred.names, las=2, ...)
   yy <- 0
   for (p in pred.names) {
     yy <- yy + 1
@@ -401,11 +400,19 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill',
     if (any(!is.na(ss$gof))) {
       symbols(x=dataYears[ss$time], y=rep(yy, length(ss$time)),
               circles=sqrt(ss$gof),
-              inches=0.1*max(sqrt(ss$gof), na.rm=T), add=T,
+              inches=0.1*max(sqrt(ss$gof), na.rm=TRUE), add=TRUE,
               fg="grey20",
               bg=ifelse(ss$slp < 0, dot.fill["neg"], dot.fill["pos"]))
     } # if(any(!is.na(...)))
   } # for(p)
+  # add slope legend at top of plot:
+  x1 <- min(years) 
+  x2 <- min(years) + 0.5*diff(range(years))
+  symbols(x=c(x1,x2), y=c(n.pred+1.5, n.pred+1.5) , add=TRUE,
+          circles=c(0.5,0.5), inches=c(0.1,0.1), fg="grey20",
+          bg=dot.fill[c("neg","pos")])
+  text(x=c(x1,x2) + 0.03*diff(range(years)), y=rep(n.pred+1.5, 2),
+       labels=c('Slope Negative', 'Slope Positive'), adj=c(0,0.5))
   par(op)
 } # tsDotPlot()
 ```
@@ -443,7 +450,7 @@ The resulting list of those with long-term skill <= 0.1:
 - ICH.BIO
 
 
-```{r dotPlots, fig.height=9, fig.width=9}
+```{r dotPlots, fig.height=7.4, fig.width=7.4}
 selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.OND",
              "UWI.JAS", "UWI.OND", "CWT.JFM", "CWT.JAS", "CWT.OND", 
              "NPG.AMJ", "NPG.JAS", "NPG.OND", "SPT.LGR", "SPT.BIO", 
@@ -456,10 +463,13 @@ if (BLACKWHITE) {
 } # if(BLACKWHITE)
 
 # Ten-Year Intervals
-tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR, dot.fill=fill.col)
+tsDotPlot(ss.sel, selScale=10, dataYears=analdata$YEAR, dot.fill=fill.col, 
+          cex=0.8)
 # Twenty-Year Intervals
-tsDotPlot(ss.sel, selScale=15, dataYears=analdata$YEAR, dot.fill=fill.col)
+tsDotPlot(ss.sel, selScale=15, dataYears=analdata$YEAR, dot.fill=fill.col, 
+          cex=0.8)
 # All Data (Variable Intervals)
-tsDotPlot(ss.sel, selScale=NA, dataYears=analdata$YEAR, dot.fill=fill.col)
+tsDotPlot(ss.sel, selScale=NA, dataYears=analdata$YEAR, dot.fill=fill.col, 
+          cex=0.8)
 ```
 
