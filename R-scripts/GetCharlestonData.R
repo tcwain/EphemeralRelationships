@@ -176,7 +176,8 @@ print(summary(.reg2))
 oimb.adj <- cbind(Year=oimb.anom$Year, oimb.anom[,2:13]*.reg2$coef)
 oimb.adj[,2:13] <- sweep(oimb.adj[,2:13], 2, -.mns2) #add monthly means back in
 
-# add years up to 1992 to wt.mon
+# add years up to 1992 to wt.mon (final output table)
+wt.mon <- tswt.mon
 wt.mon <- rbind(oimb.adj[oimb.adj$Year %in% 1966:1992, ], wt.mon)
 rownames(wt.mon) <-wt.mon$Year
 print(wt.mon)
