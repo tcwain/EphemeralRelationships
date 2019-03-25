@@ -1,7 +1,7 @@
-#  OCN_Rivers.dat		
-#  Last update 28 Nov 2018 by TCW, data from 2018 Preseason Report I		
-#  Oregon Coho Natural recruits, Rivers (per thousand)		
-#  Adults by return year (t), spawners with 3 year lag (t-3)		
+#  OCN_Rivers.dat
+#  Last update 25 Mar 2019 by TCW, data from PFMC 2019 Preseason Report I
+#  Oregon Coho Natural recruits, Rivers (per thousand)
+#  Adults by return year (t), spawners with 3 year lag (t-3)
 YEAR	ADULTS	SPAWNERS
 1970	183.1	204.7
 1971	416.3	198.9
@@ -49,6 +49,7 @@ YEAR	ADULTS	SPAWNERS
 2013	130.2	244.7
 2014	377.4	336
 2015	64.6	80.2
-2016	74.4	110.8
-2017	64.1	337.7
-2018	NA	52.4
+2016	74.3	110.8
+2017	67.4	337.7
+2018	73.6	52.4
+2019  NA  67.9
