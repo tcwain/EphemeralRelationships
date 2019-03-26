@@ -101,7 +101,8 @@ of salmon data against published data sets.
 analdata <- read.csv(file.path("Data", "AnalysisData.csv"), header=TRUE)
 # shorten NPGO abbrev. to 3 letters:
 names(analdata) <- sub('NPGO.', 'NPG.', names(analdata))
-analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with recruits.
+analdata <- analdata[!is.na(analdata$OPIH.RC), ] # Use only years with recruits.
+#analdata <- analdata[!is.na(analdata$OCN.RCR), ] # Use only years with recruits.
 # Plot to check data alignment
 with(analdata, {
   plot(YEAR, scale(OCN.RCR), type='l', ylim=c(-3,3), tck=1, 
@@ -313,7 +314,7 @@ for (series in names(ss.out)) {
   cat('\t Range of Skill: ', round(range(ss$gof, na.rm=TRUE),2), '\n')
 ##  if (max(ss$gof, na.rm=TRUE) > skillthresh) { 
     skillPlot(ss, title=series, dot.scale=1.0, dot.fill=fill.col, cex=0.75,
-              add.contours = FALSE, xlim=c(1975,2015), ylim=c(5,50)) 
+              add.contours = FALSE, xlim=c(1965,2015), ylim=c(5,60)) 
 ##  } # if
 } # for(series)
 par(op)
