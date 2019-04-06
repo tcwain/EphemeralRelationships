@@ -1,5 +1,5 @@
 ---
-title: "Coho Forecast Time Scales"
+title: "Coho Forecast Relationship Time Scales"
 author: "TC Wainwright"
 date: 'Updated: `r Sys.Date()`'
 output:
@@ -43,7 +43,7 @@ errors, and only needs to be done if the file "AnalysisData.csv" is out of date.
 
 ```{r ScriptConfig}
 UPDATE.DATA <- FALSE
-BLACKWHITE <- TRUE
+BLACKWHITE <- FALSE
 ```
 
 ## Data
@@ -240,7 +240,7 @@ skillPlot <- function(ss, title="", dot.scale=1,
        paste0("Maximum Skill: ", round(max(ss$gof),2)), 
        adj=c(0,1), col='black', ...)
     symbols(ss$time, ss$scale,
-            circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey20',
+            circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey40',
             bg=ifelse(ss$slp<0,dot.fill["neg"],dot.fill["pos"]), add=T)
   if (add.contours) {
     if (requireNamespace('akima')) {
@@ -299,7 +299,7 @@ if (!exists("ss.out")) {
 Summarize results and plot. Plots are done only for those with skill above 
 a threshold. The X-axis is the year of ocean entry (return year - 1).
 
-```{r Results, fig.height=5.5, fig.width=5.5}
+```{r Results, fig.height=7.4, fig.width=7.4}
 skillthresh <- 0.00
 if (BLACKWHITE) {
   fill.col <- c(neg=NULL, pos="grey50")      ## Grey-scale Figs
