@@ -231,14 +231,14 @@ skillPlot <- function(ss, title="", dot.scale=1,
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.05*yrange, title, 
        adj=c(0, 1), col='black', ...)
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.1*yrange,
-       paste0("Long-term Skill: ", round(ss$gof[ss$scale==max(ss$scale)],2)), 
+       paste0("Full-Data Skill: ", round(ss$gof[ss$scale==max(ss$scale)],2)), 
        adj=c(0,1), col='black', ...)
   text(pl.lims[1]+0.05*xrange, pl.lims[4]-0.15*yrange,
        paste0("Maximum Skill: ", round(max(ss$gof),2)), 
        adj=c(0,1), col='black', ...)
-    symbols(ss$time, ss$scale,
-            circles=dot.scale * sqrt(ss$gof), inches=FALSE, fg='grey40',
-            bg=ifelse(ss$slp<0,dot.fill["neg"],dot.fill["pos"]), add=T)
+  symbols(ss$time, ss$scale,
+          circles=dot.scale * sqrt(ss$gof) + 0.01, inches=FALSE, fg='grey40',
+          bg=ifelse(ss$slp<0,dot.fill["neg"],dot.fill["pos"]), add=T)
   if (add.contours) {
     if (requireNamespace('akima')) {
       zz <- with(ss, akima::interp(time, scale, gof, xo=sort(unique(time)), 
@@ -356,7 +356,7 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill',
   op <- par(mar=c(4,10,1,2)+0.1)
   plot(c(0,20)/20, c(0,2), type="n", axes=F, xlab=gofLabel, ylab="", 
        mgp=c(2.5,1,0), ...)
-  symbols(x=(0:20)/20, y=rep(1,21), circles=sqrt(c(0.1,1:20)/20),
+  symbols(x=(0:20)/20, y=rep(1,21), circles=sqrt(c(0.1,1:20)/20)+0.01,
           bg="grey", fg="grey20", inches=0.1, add=T)
   axis(1)
   par(op)
@@ -393,7 +393,7 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill',
     ss$gof <- pmax(0,ss$gof) # get rid of negative values (very bad fit)
     if (any(!is.na(ss$gof))) {
       symbols(x=dataYears[ss$time], y=rep(yy, length(ss$time)),
-              circles=sqrt(ss$gof),
+              circles=sqrt(ss$gof)+0.01,
               inches=0.1*max(sqrt(ss$gof), na.rm=TRUE), add=TRUE,
               fg="grey20",
               bg=ifelse(ss$slp < 0, dot.fill["neg"], dot.fill["pos"]))
