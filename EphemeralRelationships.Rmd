@@ -411,30 +411,16 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill',
 } # tsDotPlot()
 ```
 
-Plot at 10 & 20 year intervals for selected predictors:
-Criteria: had some reasonable longterm skill at some time point (max skill >= 0.1).
-
-```{r ltSkillSummary}
-  for (p in names(ss.out)) {
-    ss <- ss.out[[p]]
-    ss <- ss[!is.na(ss$gof), ] # select times and scales with data
-      # use all data up to year (the first dot in each row of the plots above)
-      xx <- data.frame(time=numeric(0), scale=numeric(0), gof=numeric(0), slp=numeric(0))
-      for (s in unique(ss$scale)) {
-        subss <- ss[ss$scale==s, ]
-        xx <- rbind(xx, subss[subss$time==min(subss$time), ])
-      } # for(s)
-    cat(p, ': range(skill) = ', round(range(xx$gof, na.rm=TRUE), 1), '\n')
-  } # for(p)
-```
-
-The resulting list of those with long-term skill <= 0.1:
+These plots are done for a subset of the full data. Selection criteria are a bit 
+ad hoc, including indicators that were used in past published forecasts, those
+that have reasonable skill across several years, and some that have interesting 
+patterns. The resulting list includes:
 
 - PDO.(JFM,AMJ,JAS,OND)
-- ONI.OND
-- UWI.(JAS,OND)
-- CWT.(JFM,JAS,OND)
-- NPG.(AMJ,JAS,OND)
+- ONI.(JFM)
+- UWI.(AMJ,JAS)
+- CWT.(JFM)
+- NPG.(JAS,OND)
 - SPT.LGR
 - SPT.BIO
 - COP.RCH
@@ -442,13 +428,14 @@ The resulting list of those with long-term skill <= 0.1:
 - COP.SAN
 - TMP.DP
 - ICH.BIO
+- ICH.COM
 
 
 ```{r dotPlots, fig.height=7.4, fig.width=7.4}
-selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.OND",
-             "UWI.JAS", "UWI.OND", "CWT.JFM", "CWT.JAS", "CWT.OND", 
-             "NPG.AMJ", "NPG.JAS", "NPG.OND", "SPT.LGR", "SPT.BIO", 
-             "COP.RCH", "COP.NAN", "COP.SAN", "TMP.DP", "ICH.BIO")
+selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.JFM", 
+             "UWI.AMJ", "UWI.JAS", "CWT.JFM", "NPG.JAS", 
+             "NPG.OND", "SPT.LGR", "SPT.BIO", "COP.RCH", "COP.NAN", 
+             "COP.SAN", "TMP.DP", "ICH.BIO", "ICH.COM")
 ss.sel <- ss.out[selpred]
 if (BLACKWHITE) {
   fill.col <- c(neg=NULL, pos="grey50")      # Grey-scale Figs
