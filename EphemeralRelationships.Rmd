@@ -328,6 +328,25 @@ with(analdata, {
 )
 ```
 
+### Plot of OPIH coho "marine survival" Along with PDO seasonal series:
+
+```{r OPIHPDOPlot, fig.height=3.7, fig.width=5.5}
+# NOTE: Recruits are in 1000's, smolts in millions.
+par(mar=c(4,4,1,4)+0.1)
+with(analdata, {
+  plot(YEAR, 0.1 * OPIH.RC / OPIH.SM, log='y', type='b', pch=19, lwd=3,
+       xlab="Year of Ocean Entry", ylab="Marine Survival (%)")
+  # Add second y-axis for PDO:
+  par(new=TRUE)
+  plot(YEAR, -PDO.AMJ, type='l', lwd=1, lty=1, axes=FALSE, bty="n",
+       ylim=c(-2, 2), xlab="", ylab="")
+  lines(YEAR, -PDO.OND, lwd=1, lty=2)
+  axis(side=4, at=-2:2, labels=rev(-2:2))
+  mtext("PDO", side=4, line=3)
+}
+)
+```
+
 ### Multiple predictor skill timeseries dot plots:
 
 A function for dot-plots of multiple predictors at a single time scale.
