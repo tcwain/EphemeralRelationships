@@ -287,29 +287,33 @@ rownames(CWT.mon) <- CWT.mon$Year
 CWT.ts <- data.frame(DecYr=.decyr, Data=.data) 
 
 ##          UWI (Upwelling Index)
-##            is daily data with four columns:  Year, Mon, Day, and 
-##            UWI, the daily upwelling index.  Compute monthly means:
+##            is monthly data with 15 columns:  Lat, Lon, Year, and monthly 
+##            UWI, the upwelling index.  
 
 cat(' * Processing UWI *\n')
 .dsd <- dataSetDefs$UWI
 .raw <- get(paste(.dsd$SrcName, '.raw', sep=''))
-# Get year and month from date column, convert number to text to POSIX date
-.date <- strptime(format(.raw$Date), '%Y%m%d') 
-.raw <- data.frame(Year=.date$year+1900, Mon=.date$mon+1, Day=.date$mday,
-                   UWI=.raw$UWI)
-# Replace missing value code (-9999) with NA:
-.raw$UWI[.raw$UWI < -9000] <- NA
-# Compute monthly means:
-UWI.mon <- tapply(.raw$UWI, 
-                        list(Year=.raw$Year, Mon=.raw$Mon), 
-                        mean, na.rm=T)
-UWI.mon <- data.frame(Year=as.numeric(rownames(UWI.mon)), UWI.mon)
+# # Get year and month from date column, convert number to text to POSIX date
+# .date <- strptime(format(.raw$Date), '%Y%m%d') 
+# .raw <- data.frame(Year=.date$year+1900, Mon=.date$mon+1, Day=.date$mday,
+#                    UWI=.raw$UWI)
+# # Replace missing value code (-9999) with NA:
+# .raw$UWI[.raw$UWI < -9000] <- NA
+# # Compute monthly means:
+# UWI.mon <- tapply(.raw$UWI, 
+#                         list(Year=.raw$Year, Mon=.raw$Mon), 
+#                         mean, na.rm=T)
+
+# UWI download is monthly data for all West Coast locations.
+# get data for 45N only, columns 3:15 (Year + monthly UWI)
+UWI.mon <- data.frame(.raw[.raw$Lat=="45N", 3:15])
+# UWI.mon <- data.frame(Year=as.numeric(rownames(UWI.mon)), UWI.mon)
 names(UWI.mon) <- c('Year', month.abb)
 .data <- as.vector(t(UWI.mon[ , -1]))
 .decyr <- min(UWI.mon$Year) + (1:length(.data) - 0.5)/12
 UWI.ts <- data.frame(DecYr=.decyr, Data=.data) 
-# Store revised raw structure for later use:
-UWI.raw <- .raw
+# # Store revised raw structure for later use:
+# UWI.raw <- .raw
 
 ##          SPT.LGR (Logerwell-method Physical Spring Transition)
            
