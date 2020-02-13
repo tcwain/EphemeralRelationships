@@ -153,6 +153,9 @@ loo.skill <- compiler::cmpfun(function(df) {
     n <- nrow(df)
     loo.pred <- function(i) predict(lm(Y ~ X, data=df[-i,]), newdata=df[i,])
     .pred <- sapply(1:n, loo.pred)
+    ### DEBUG - test if any predictions exceed 0.0 (survival > 1 in real data)
+    ## if (any(.pred>0)) cat('\nPredictions exceed 0.0.')
+    ### end DEBUG
     loo.cvs <- 1 - (n-1) / (n-2) * sum((.pred - df$Y)^2) / sum((ybar - df$Y)^2)
     return(list(CVS=loo.cvs, X=df$X, Y=df$Y, Pred=.pred))
   } else { # Insuffient data
