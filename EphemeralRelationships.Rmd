@@ -421,41 +421,25 @@ tsDotPlot <- function(ssList, selScale=NA, dataYears, gofLabel='Skill',
   # add slope legend at top of plot:
   x1 <- min(years) 
   x2 <- min(years) + 0.5*diff(range(years))
-  symbols(x=c(x1,x2), y=c(n.pred+1.5, n.pred+1.5) , add=TRUE,
+  symbols(x=c(x1,x2), y=c(n.pred+1.8, n.pred+1.8) , add=TRUE,
           circles=c(0.5,0.5), inches=c(0.1,0.1), fg="grey20",
           bg=dot.fill[c("neg","pos")])
-  text(x=c(x1,x2) + 0.03*diff(range(years)), y=rep(n.pred+1.5, 2),
+  text(x=c(x1,x2) + 0.03*diff(range(years)), y=rep(n.pred+1.8, 2),
        labels=c('Slope Negative', 'Slope Positive'), adj=c(0,0.5))
   par(op)
 } # tsDotPlot()
 ```
 
-These plots are done for a subset of the full data. Selection criteria are a bit 
-ad hoc, including indicators that were used in past published forecasts, those
-that have reasonable skill across several years, and some that have interesting 
-patterns. The resulting list includes:
+These plots are done for the full data at window sizes of 10 years, 15 years,
+and all years with data available.
 
-- PDO.(JFM,AMJ,JAS,OND)
-- ONI.(JFM)
-- UWI.(AMJ,JAS)
-- CWT.(JFM)
-- NPG.(JAS,OND)
-- SPT.LGR
-- SPT.BIO
-- COP.RCH
-- COP.NAN
-- COP.SAN
-- TMP.DP
-- ICH.BIO
-- ICH.COM
-
-
-```{r dotPlots, fig.height=7.4, fig.width=7.4}
-selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.JFM", 
-             "UWI.AMJ", "UWI.JAS", "CWT.JFM", "NPG.JAS", 
-             "NPG.OND", "SPT.LGR", "SPT.BIO", "COP.RCH", "COP.NAN", 
-             "COP.SAN", "TMP.DP", "ICH.BIO", "ICH.COM")
-ss.sel <- ss.out[selpred]
+```{r dotPlots, fig.height=9, fig.width=7.4}
+# selpred <- c("PDO.JFM", "PDO.AMJ", "PDO.JAS", "PDO.OND", "ONI.JFM", 
+#              "UWI.AMJ", "UWI.JAS", "CWT.JFM", "NPG.JAS", 
+#              "NPG.OND", "SPT.LGR", "SPT.BIO", "COP.RCH", "COP.NAN", 
+#              "COP.SAN", "TMP.DP", "ICH.BIO", "ICH.COM")
+# ss.sel <- ss.out[selpred]
+ss.sel <- ss.out
 if (BLACKWHITE) {
   fill.col <- c(neg=NULL, pos="grey50")      # Grey-scale Figs
 } else {
