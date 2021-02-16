@@ -27,8 +27,8 @@ Besides R base and recommended packages, this document optionally uses R package
 
 ## Introduction
 
-This document details the analyses in Wainwright (2019, [ADD TITLE], Progr. 
-Oceanogr. XX:XXX-XXX).
+This document details the analyses in Wainwright (2021, _Ephemeral Relationships in Salmon Forecasting: a Cautionary Tale_, Progr. 
+Oceanogr. [DOI:10.1016/j.pocean.2021.102522](https://doi.org/10.1016/j.pocean.2021.102522)).
 
 ## Script Configuration
 
