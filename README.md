@@ -1,7 +1,7 @@
 # Ephemeral Relationsips in Salmon Forecasting
 
 This repository contains all data and R-language scripts needed to reproduce the 
-analysis in _Ephemeral Relationships in Salmon Forecasting: a Cautionary Tale_ (Wainwright 2020, **Progress in Oceanography** XX:XXX-XXX).
+analysis in _Ephemeral Relationships in Salmon Forecasting: a Cautionary Tale_ (Wainwright 2021, **Progress in Oceanography** [DOI:10.1016/j.pocean.2021.102522](https://doi.org/10.1016/j.pocean.2021.102522)).
 
 The full analysis and detailed results for the publication are in the vignette
 "EphemeralRelatinships.Rmd". Data and R scripts used in the vignette can 
